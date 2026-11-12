@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>校园助理 · 首页模板提案（8 套）</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#17181c;
+  --muted:#7a7b84;
+  --line:#e8e5df;
+}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(1100px 620px at 6% -12%,#efe8ff 0%,rgba(239,232,255,0) 62%),
+    radial-gradient(900px 520px at 98% -4%,#e3f6f4 0%,rgba(227,246,244,0) 58%),
+    #f7f6f3;
+  -webkit-font-smoothing:antialiased;
+  padding:54px 36px 96px;
+  min-height:100vh;
+}
+
+/* ---------- page header ---------- */
+.phead{max-width:1320px;margin:0 auto 46px}
+.kicker{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:#6d5bd0;background:#fff;border:1px solid #e6e1f8;
+  padding:7px 12px;border-radius:99px;box-shadow:0 2px 10px rgba(109,91,208,.08)
+}
+.kicker i{width:6px;height:6px;border-radius:50%;background:#6d5bd0;display:block}
+.phead h1{
+  font-size:38px;line-height:1.18;letter-spacing:-.03em;font-weight:800;margin:18px 0 12px
+}
+.phead h1 em{
+  font-style:normal;
+  background:linear-gradient(100deg,#6d5bd0,#0ea5a4 72%);
+  -webkit-background-clip:text;background-clip:text;color:transparent
+}
+.phead p{font-size:14px;line-height:1.75;color:var(--muted);max-width:720px}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.legend span{
+  font-size:12px;color:#565761;background:#fff;border:1px solid var(--line);
+  padding:6px 11px;border-radius:8px
+}
+.legend b{color:#17181c}
+
+/* ---------- grid ---------- */
+.grid{
+  max-width:1320px;margin:0 auto;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(336px,1fr));
+  gap:56px 34px;justify-items:center
+}
+.tpl{display:flex;flex-direction:column;align-items:center;width:100%}
+.thead{width:330px;display:flex;align-items:flex-start;gap:11px;margin-bottom:16px}
+.tno{
+  font-family:ui-monospace,"SF Mono",Consolas,monospace;
+  font-size:12px;font-weight:700;color:#bbb5c9;
+  border:1px solid #e4dfee;border-radius:7px;padding:3px 6px;margin-top:2px;flex:none
+}
+.tmeta{min-width:0}
+.tmeta h2{font-size:15.5px;font-weight:750;letter-spacing:-.01em;line-height:1.3}
+.tmeta h2 small{
+  font-family:ui-monospace,"SF Mono",Consolas,monospace;
+  font-size:10.5px;font-weight:500;color:#a8a3b6;letter-spacing:.04em;margin-left:6px
+}
+.tmeta p{font-size:11.5px;color:#8a8b94;margin-top:4px;line-height:1.55}
+
+/* ---------- phone frame ---------- */
+.phone{
+  width:330px;height:672px;border-radius:46px;padding:11px;flex:none;
+  background:linear-gradient(160deg,#31333a,#0e0f12 45%,#2a2c32);
+  box-shadow:
+    0 34px 64px -26px rgba(20,22,34,.45),
+    0 8px 18px -8px rgba(20,22,34,.2),
+    inset 0 0 0 1px rgba(255,255,255,.09);
+  cursor:zoom-in;transition:transform .35s cubic-bezier(.2,.8,.3,1),box-shadow .35s;
+  position:relative
+}
+.phone:hover{transform:translateY(-7px);box-shadow:0 46px 80px -26px rgba(20,22,34,.5),inset 0 0 0 1px rgba(255,255,255,.12)}
+.screen{
+  position:relative;width:100%;height:100%;border-radius:36px;overflow:hidden;
+  display:flex;flex-direction:column;isolation:isolate
+}
+.island{
+  position:absolute;top:11px;left:50%;transform:translateX(-50%);
+  width:86px;height:21px;border-radius:12px;background:#07080a;z-index:30;
+  box-shadow:0 0 0 1px rgba(255,255,255,.05)
+}
+.sb{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:17px 22px 8px;font-size:10.5px;font-weight:700;
+  letter-spacing:.03em;position:relative;z-index:20
+}
+.sb-i{display:flex;align-items:center;gap:5px;opacity:.9}
+
+/* ---------- shared layout ---------- */
+.body{
+  position:relative;z-index:10;flex:1;min-height:0;
+  display:flex;flex-direction:column;gap:12px;padding:6px 16px 0
+}
+.hdr{display:flex;align-items:center;gap:10px;padding:5px 2px 2px}
+.ava{
+  width:44px;height:44px;border-radius:14px;flex:none;
+  display:grid;place-items:center;font-size:17px;font-weight:800;letter-spacing:.02em
+}
+.hdr-t{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.hdr-t b{font-size:15px;font-weight:750;line-height:1.1;letter-spacing:-.01em}
+.hdr-t span{font-size:10.5px;opacity:.6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.more{
+  width:26px;height:26px;border-radius:9px;flex:none;
+  display:grid;place-items:center;font-size:13px;opacity:.55;letter-spacing:1px
+}
+
+.hero{border-radius:20px;padding:14px 15px 13px;position:relative;overflow:hidden}
+.hero-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.eyebrow{font-size:9.5px;letter-spacing:.15em;font-weight:800;text-transform:uppercase;opacity:.55}
+.pill{font-size:10.5px;font-weight:800;padding:4px 9px;border-radius:99px;flex:none}
+.hero-name{font-size:15.5px;font-weight:750;margin-top:7px;letter-spacing:-.012em;line-height:1.25}
+.hero-sub{font-size:11px;opacity:.55;margin-top:4px;letter-spacing:.01em}
+.bar{height:4px;border-radius:99px;margin-top:12px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px}
+
+.list{display:flex;flex-direction:column;gap:8px}
+.row{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:15px}
+.row-ic{
+  width:27px;height:27px;border-radius:9px;flex:none;
+  display:grid;place-items:center;font-size:11px;font-weight:800
+}
+.row-t{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.row-t b{font-size:12.5px;font-weight:650;letter-spacing:-.005em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-t span{font-size:10.5px;opacity:.5}
+.row-d{font-size:10.5px;font-weight:800;flex:none;letter-spacing:.01em}
+
+.chips{display:flex;gap:7px;margin-top:auto}
+.chip{
+  font-size:10.5px;font-weight:600;padding:7px 11px;border-radius:99px;
+  display:flex;align-items:center;gap:5px;white-space:nowrap
+}
+.hint{margin-top:auto;text-align:center;font-size:10px;opacity:.4;padding:2px 0 3px;letter-spacing:.02em}
+
+.composer{padding:11px 16px 19px;position:relative;z-index:10}
+.inp{display:flex;align-items:center;gap:9px;border-radius:16px;padding:8px 8px 8px 14px}
+.inp em{flex:1;font-style:normal;font-size:11.5px;opacity:.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plus{width:28px;height:28px;border-radius:10px;display:grid;place-items:center;font-size:16px;flex:none;font-weight:600}
+
+/* =========================================================
+   01 AURORA GLASS
+========================================================= */
+.s-aurora{background:#070a1c;color:#fff}
+.s-aurora::before{
+  content:"";position:absolute;inset:-28%;z-index:0;
+  background:
+    radial-gradient(40% 34% at 20% 16%,rgba(124,58,237,.9),transparent 62%),
+    radial-gradient(36% 30% at 84% 22%,rgba(14,165,233,.75),transparent 64%),
+    radial-gradient(44% 36% at 62% 92%,rgba(236,72,153,.55),transparent 66%);
+  filter:blur(24px);animation:aurora 14s ease-in-out infinite alternate
+}
+@keyframes aurora{to{transform:translate3d(5%,4%,0) scale(1.12) rotate(9deg)}}
+.s-aurora .ava{background:linear-gradient(140deg,#a78bfa,#22d3ee);color:#070d20;box-shadow:0 8px 22px -6px rgba(124,58,237,.75)}
+.s-aurora .more{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12)}
+.s-aurora .hero{
+  background:linear-gradient(150deg,rgba(255,255,255,.17),rgba(255,255,255,.04));
+  border:1px solid rgba(255,255,255,.17);backdrop-filter:blur(14px);
+  box-shadow:0 18px 40px -20px rgba(0,0,0,.9)
+}
+.s-aurora .pill{background:linear-gradient(135deg,#a78bfa,#22d3ee);color:#06091a;box-shadow:0 4px 16px -4px rgba(34,211,238,.8)}
+.s-aurora .bar{background:rgba(255,255,255,.14)}
+.s-aurora .bar i{background:linear-gradient(90deg,#a78bfa,#22d3ee);box-shadow:0 0 12px rgba(34,211,238,.7)}
+.s-aurora .row{background:rgba(255,255,255,.065);border:1px solid rgba(255,255,255,.1)}
+.s-aurora .row-ic{background:rgba(167,139,250,.2);color:#c4b5fd}
+.s-aurora .row-d{color:#7dd3fc}
+.s-aurora .chip{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);color:rgba(255,255,255,.85)}
+.s-aurora .inp{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(12px)}
+.s-aurora .plus{background:linear-gradient(135deg,#a78bfa,#22d3ee);color:#070c1e}
+.s-aurora .hint{opacity:.5}
+.s-aurora .hero-sub{opacity:.62}
+
+/* =========================================================
+   02 CANDY POP
+========================================================= */
+.s-candy{background:linear-gradient(168deg,#FFF4E2 0%,#FFE8F1 46%,#E7F7F3 100%);color:#231F1C}
+.s-candy::before{
+  content:"";position:absolute;width:190px;height:190px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,122,89,.28),transparent 68%);
+  top:-58px;right:-64px;filter:blur(6px)
+}
+.s-candy::after{
+  content:"";position:absolute;width:170px;height:170px;border-radius:50%;
+  background:radial-gradient(circle,rgba(78,205,196,.3),transparent 68%);
+  bottom:24px;left:-70px;filter:blur(6px)
+}
+.s-candy .ava{background:#FFD23F;border:2.5px solid #231F1C;box-shadow:3px 3px 0 #231F1C;border-radius:50%;color:#231F1C}
+.s-candy .hdr-t b{font-size:16px;font-weight:850}
+.s-candy .more{border:2px solid #231F1C;background:#fff;border-radius:8px;box-shadow:2px 2px 0 #231F1C;opacity:1}
+.s-candy .hero{background:#fff;border:2.5px solid #231F1C;box-shadow:6px 6px 0 #FF7A59;border-radius:22px}
+.s-candy .eyebrow{color:#FF7A59;opacity:1;letter-spacing:.13em}
+.s-candy .pill{background:#FF7A59;color:#fff;border:2px solid #231F1C;padding:3px 9px;font-weight:850}
+.s-candy .hero-sub{opacity:.62}
+.s-candy .row-t span{opacity:.62}
+.s-candy .hero-name{font-size:16px;font-weight:850}
+.s-candy .bar{background:#F2E7DA;border:1.5px solid #231F1C;height:7px}
+.s-candy .bar i{background:repeating-linear-gradient(45deg,#4ECDC4 0 5px,#6fe0d8 5px 10px)}
+.s-candy .row{background:#fff;border:2px solid #231F1C;box-shadow:3.5px 3.5px 0 #FFD23F;border-radius:16px}
+.s-candy .row-ic{background:#FFE9DE;color:#E0552F;border:1.5px solid #231F1C;border-radius:8px}
+.s-candy .row-d{background:#231F1C;color:#fff;padding:2.5px 6px;border-radius:6px}
+.s-candy .chip{background:#fff;border:2px solid #231F1C;box-shadow:2.5px 2.5px 0 #4ECDC4;font-weight:750}
+.s-candy .inp{background:#fff;border:2.5px solid #231F1C;box-shadow:3.5px 3.5px 0 #4ECDC4}
+.s-candy .plus{background:#FF7A59;color:#fff;border:2px solid #231F1C;border-radius:9px}
+
+/* =========================================================
+   03 CYBER TERMINAL
+========================================================= */
+.s-cyber{
+  background:#04060a;color:#b6f2cf;
+  font-family:ui-monospace,"SF Mono",Consolas,"Courier New",monospace
+}
+.s-cyber::before{
+  content:"";position:absolute;inset:0;z-index:0;
+  background-image:
+    linear-gradient(rgba(59,240,122,.075) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(59,240,122,.075) 1px,transparent 1px);
+  background-size:22px 22px
+}
+.s-cyber::after{
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.32) 0 1px,rgba(0,0,0,0) 1px 3px);
+  opacity:.5;animation:scan 7s linear infinite
+}
+@keyframes scan{to{transform:translateY(3px)}}
+.s-cyber .ava{
+  background:#08150e;border:1px solid #3bf07a;color:#3bf07a;border-radius:9px;
+  box-shadow:0 0 18px rgba(59,240,122,.45),inset 0 0 14px rgba(59,240,122,.25)
+}
+.s-cyber .hdr-t b{color:#3bf07a;letter-spacing:.1em;font-size:13.5px;text-shadow:0 0 10px rgba(59,240,122,.55)}
+.s-cyber .hdr-t span{color:#5d9a79;opacity:1;font-size:9.5px;letter-spacing:.03em}
+.s-cyber .more{border:1px solid rgba(59,240,122,.35);color:#3bf07a;border-radius:4px;opacity:1}
+.s-cyber .hero{
+  background:linear-gradient(180deg,rgba(59,240,122,.11),rgba(59,240,122,.015));
+  border:1px solid rgba(59,240,122,.38);border-radius:7px
+}
+.s-cyber .eyebrow{color:#ff3d8b;opacity:1;letter-spacing:.16em;text-shadow:0 0 10px rgba(255,61,139,.5)}
+.s-cyber .hero-name{color:#e2ffef;font-size:13.5px;letter-spacing:.02em;font-weight:600}
+.s-cyber .hero-sub{color:#6fb894;opacity:1;font-size:10px}
+.s-cyber .pill{background:rgba(255,61,139,.14);color:#ff6ba4;border:1px solid rgba(255,61,139,.55);border-radius:3px;text-shadow:0 0 10px rgba(255,61,139,.7);font-size:10px}
+.s-cyber .bar{background:rgba(59,240,122,.14);height:3px}
+.s-cyber .bar i{background:#3bf07a;box-shadow:0 0 10px #3bf07a}
+.s-cyber .row{
+  background:rgba(59,240,122,.045);border:1px solid rgba(59,240,122,.16);
+  border-left:2px solid #3bf07a;border-radius:4px;padding:10px 11px
+}
+.s-cyber .row-ic{background:rgba(59,240,122,.12);color:#8ff7bb;border-radius:3px;font-size:10px}
+.s-cyber .row-t b{color:#c8ffdf;font-size:11.5px}
+.s-cyber .row-t span{color:#5d9a79;opacity:1;font-size:9.5px}
+.s-cyber .row-d{color:#ff6ba4;font-size:10px;text-shadow:0 0 8px rgba(255,61,139,.6)}
+.s-cyber .chip{background:rgba(59,240,122,.07);border:1px solid rgba(59,240,122,.28);color:#8ff7bb;border-radius:3px;font-size:9.5px}
+.s-cyber .inp{background:rgba(0,0,0,.72);border:1px solid rgba(59,240,122,.4);border-radius:5px;color:#8ff7bb}
+.s-cyber .inp em{font-size:10.5px}
+.s-cyber .inp em::after{content:"▌";margin-left:2px;animation:blink 1.05s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.s-cyber .plus{background:rgba(59,240,122,.14);border:1px solid #3bf07a;color:#3bf07a;border-radius:4px}
+
+/* =========================================================
+   04 QUIET PAPER
+========================================================= */
+.s-paper{background:#FBF8F2;color:#24211B;font-family:Georgia,"Songti SC","SimSun","Times New Roman",serif}
+.s-paper::before{
+  content:"";position:absolute;inset:0;z-index:0;
+  background:radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.9),rgba(246,241,231,.55));
+  mix-blend-mode:multiply;opacity:.75
+}
+.s-paper .sb{font-family:ui-monospace,"SF Mono",Consolas,monospace;font-weight:600;font-size:10px;letter-spacing:.06em}
+.s-paper .ava{background:transparent;border:1px solid #2b271f;border-radius:50%;font-size:14px;font-weight:600}
+.s-paper .hdr-t b{font-size:18px;font-weight:600;letter-spacing:.03em}
+.s-paper .hdr-t span{font-style:italic;opacity:.5;font-size:10.5px;letter-spacing:.01em}
+.s-paper .more{border:1px solid #DCD5C4;border-radius:50%;opacity:1;color:#6b6252}
+.s-paper .hero{background:transparent;border:0;border-radius:0;padding:2px 0 2px 15px;border-left:2px solid #9A3B2E}
+.s-paper .eyebrow{color:#9A3B2E;opacity:1;letter-spacing:.24em;font-size:9px;font-family:ui-monospace,Consolas,monospace}
+.s-paper .pill{background:transparent;border:1px solid #CFC6B2;border-radius:2px;color:#6E6353;font-weight:500;font-size:10px;letter-spacing:.06em}
+.s-paper .hero-name{font-size:17.5px;font-weight:600;letter-spacing:.005em;margin-top:6px}
+.s-paper .hero-sub{font-size:10.5px;opacity:.55;letter-spacing:.06em;font-family:ui-monospace,Consolas,monospace}
+.s-paper .bar{display:none}
+.s-paper .list{gap:0}
+.s-paper .row{background:transparent;border:0;border-bottom:1px solid #E8E2D2;border-radius:0;padding:12.5px 2px}
+.s-paper .row-ic{background:transparent;border:1px solid #DDD5C3;border-radius:50%;font-size:10px;color:#7A705C;font-family:ui-monospace,Consolas,monospace}
+.s-paper .row-t b{font-size:12.5px;font-weight:600;letter-spacing:.01em}
+.s-paper .row-t span{font-size:10px;opacity:.45;font-family:ui-monospace,Consolas,monospace;letter-spacing:.03em}
+.s-paper .row-d{color:#9A3B2E;font-weight:600;font-size:10px;font-family:ui-monospace,Consolas,monospace}
+.s-paper .chip{background:transparent;border:1px solid #DCD5C4;border-radius:2px;color:#6b6252;font-weight:500}
+.s-paper .inp{background:transparent;border:0;border-bottom:1px solid #2b271f;border-radius:0;padding:9px 2px}
+.s-paper .inp em{font-style:italic;font-size:11.5px;opacity:.42}
+.s-paper .plus{border:1px solid #2b271f;border-radius:50%;background:transparent;color:#2b271f}
+
+/* =========================================================
+   05 GALAXY
+========================================================= */
+.s-gal{background:radial-gradient(130% 82% at 50% -12%,#2c1c62 0%,#150d33 46%,#060515 100%);color:#EDE9FF}
+.s-gal::before{
+  content:"";position:absolute;inset:0;z-index:0;
+  background-image:
+    radial-gradient(1.6px 1.6px at 22px 78px,#fff,transparent),
+    radial-gradient(1.2px 1.2px at 96px 42px,#dfd8ff,transparent),
+    radial-gradient(2px 2px at 168px 128px,#fff,transparent),
+    radial-gradient(1.2px 1.2px at 246px 66px,#c9c0ff,transparent),
+    radial-gradient(1.6px 1.6px at 288px 182px,#fff,transparent),
+    radial-gradient(1.2px 1.2px at 62px 214px,#ddd6ff,transparent),
+    radial-gradient(1.4px 1.4px at 138px 288px,#fff,transparent),
+    radial-gradient(1.2px 1.2px at 214px 342px,#cfc7ff,transparent),
+    radial-gradient(1.8px 1.8px at 40px 402px,#fff,transparent),
+    radial-gradient(1.2px 1.2px at 286px 462px,#ddd6ff,transparent),
+    radial-gradient(1.6px 1.6px at 108px 528px,#fff,transparent),
+    radial-gradient(1.2px 1.2px at 232px 596px,#c9c0ff,transparent);
+  opacity:.85;animation:twinkle 5.5s ease-in-out infinite alternate
+}
+@keyframes twinkle{to{opacity:.42}}
+.s-gal::after{
+  content:"";position:absolute;width:280px;height:280px;border-radius:50%;
+  left:-90px;bottom:-120px;z-index:0;
+  background:radial-gradient(circle at 40% 34%,rgba(139,92,246,.55),rgba(76,29,149,.12) 58%,transparent 72%);
+  filter:blur(14px)
+}
+.s-gal .ava{
+  background:radial-gradient(circle at 32% 28%,#d8ccff,#7c3aed 58%,#31116b);
+  border-radius:50%;
+  box-shadow:0 0 26px -2px rgba(139,92,246,.85),inset -7px -9px 16px rgba(0,0,0,.55);
+  color:#fff
+}
+.s-gal .more{background:rgba(196,181,253,.12);border:1px solid rgba(196,181,253,.2);border-radius:9px}
+.s-gal .hero{
+  background:linear-gradient(155deg,rgba(196,181,253,.16),rgba(196,181,253,.03));
+  border:1px solid rgba(196,181,253,.24);
+  box-shadow:0 0 46px -14px rgba(139,92,246,.9),inset 0 1px 0 rgba(255,255,255,.14)
+}
+.s-gal .eyebrow{color:#c4b5fd;opacity:1;letter-spacing:.16em}
+.s-gal .pill{background:linear-gradient(135deg,rgba(196,181,253,.95),rgba(129,140,248,.95));color:#1a1140;box-shadow:0 0 18px -2px rgba(167,139,250,.9)}
+.s-gal .bar{background:rgba(196,181,253,.16)}
+.s-gal .bar i{background:linear-gradient(90deg,#c4b5fd,#38bdf8);box-shadow:0 0 12px rgba(167,139,250,.9)}
+.s-gal .row{background:rgba(196,181,253,.07);border:1px solid rgba(196,181,253,.15);backdrop-filter:blur(8px)}
+.s-gal .row-ic{background:rgba(139,92,246,.28);color:#ddd6fe;border-radius:50%}
+.s-gal .row-d{color:#a5b4fc}
+.s-gal .chip{background:rgba(196,181,253,.09);border:1px solid rgba(196,181,253,.2);color:#ddd6fe}
+.s-gal .inp{background:rgba(196,181,253,.09);border:1px solid rgba(196,181,253,.26);backdrop-filter:blur(10px)}
+.s-gal .plus{background:linear-gradient(135deg,#a78bfa,#6366f1);color:#140d33}
+
+/* =========================================================
+   06 SOFT CLAY
+========================================================= */
+.s-clay{background:linear-gradient(168deg,#F0EEFC 0%,#F8EBF5 52%,#E9F5F2 100%);color:#3C3358}
+.s-clay .ava{
+  background:linear-gradient(145deg,#fff,#DBD5F6);border-radius:50%;color:#6D5EAF;
+  box-shadow:5px 5px 13px rgba(138,128,190,.38),-4px -4px 11px rgba(255,255,255,.95)
+}
+.s-clay .more{
+  background:#F0EEFC;border-radius:50%;
+  box-shadow:3px 3px 8px rgba(138,128,190,.3),-3px -3px 7px rgba(255,255,255,.95);opacity:1;color:#8B7FC0
+}
+.s-clay .hero{
+  background:#F3F1FE;border-radius:24px;
+  box-shadow:8px 8px 18px rgba(138,128,190,.3),-7px -7px 16px rgba(255,255,255,.98)
+}
+.s-clay .eyebrow{color:#8B7FC0;opacity:1}
+.s-clay .pill{background:linear-gradient(135deg,#B8F0DC,#9DD9F3);color:#2A4B4E;box-shadow:2px 2px 6px rgba(120,160,180,.28)}
+.s-clay .hero-sub{opacity:.66}
+.s-clay .row-t span{opacity:.6}
+.s-clay .hero-name{font-weight:750}
+.s-clay .bar{background:#E4E0F6;box-shadow:inset 2px 2px 4px rgba(138,128,190,.4),inset -1px -1px 3px rgba(255,255,255,.9);height:6px}
+.s-clay .bar i{background:linear-gradient(90deg,#B8A9F0,#8FD3F4)}
+.s-clay .row{
+  background:#F3F1FE;border-radius:18px;
+  box-shadow:6px 6px 14px rgba(138,128,190,.22),-5px -5px 12px rgba(255,255,255,.95)
+}
+.s-clay .row-ic{background:linear-gradient(145deg,#fff,#E2DDF8);color:#7A6BB5;border-radius:50%;box-shadow:2px 2px 5px rgba(138,128,190,.3)}
+.s-clay .row-d{color:#7A6BB5}
+.s-clay .chip{
+  background:#F3F1FE;box-shadow:4px 4px 10px rgba(138,128,190,.22),-3px -3px 8px rgba(255,255,255,.95);
+  color:#6D5EAF
+}
+.s-clay .inp{
+  background:#F3F1FE;border-radius:20px;
+  box-shadow:inset 4px 4px 9px rgba(138,128,190,.28),inset -4px -4px 9px rgba(255,255,255,.95)
+}
+.s-clay .plus{
+  background:linear-gradient(145deg,#fff,#E3DEF8);color:#7A6BB5;border-radius:50%;
+  box-shadow:3px 3px 8px rgba(138,128,190,.32),-2px -2px 6px rgba(255,255,255,.95)
+}
+
+/* =========================================================
+   07 STUDY JOURNAL
+========================================================= */
+.s-jrn{
+  background:#FDFBF3;color:#2B271F;
+  font-family:"Kaiti SC",KaiTi,STKaiti,"Songti SC",Georgia,serif
+}
+.s-jrn::before{
+  content:"";position:absolute;inset:0;z-index:0;
+  background-image:
+    repeating-linear-gradient(0deg,rgba(88,132,214,.11) 0 1px,transparent 1px 19px),
+    repeating-linear-gradient(90deg,rgba(88,132,214,.11) 0 1px,transparent 1px 19px)
+}
+.s-jrn::after{
+  content:"";position:absolute;top:0;bottom:0;left:34px;width:1px;
+  background:rgba(214,110,110,.4);z-index:0
+}
+.s-jrn .ava{
+  background:#FFE68A;border-radius:11px;transform:rotate(-4deg);color:#5C4A10;
+  box-shadow:2px 3px 0 rgba(90,70,20,.18);font-size:16px
+}
+.s-jrn .hdr-t b{font-size:18px;font-weight:600;letter-spacing:.02em}
+.s-jrn .hdr-t span{font-size:10.5px;opacity:.5}
+.s-jrn .more{border:1px dashed #C9C0A8;border-radius:8px;color:#8A7C5E;opacity:1}
+.s-jrn .hero{
+  background:#fff;border:1px solid #EAE3CF;border-radius:6px;
+  box-shadow:3px 4px 0 rgba(140,125,90,.1);transform:rotate(-1.1deg);
+  padding:15px 15px 14px
+}
+.s-jrn .hero::before{
+  content:"";position:absolute;top:-9px;left:22px;width:62px;height:19px;
+  background:rgba(255,214,102,.62);transform:rotate(-3.5deg);
+  box-shadow:0 1px 2px rgba(150,120,40,.16);border-radius:1px
+}
+.s-jrn .eyebrow{color:#B4632F;opacity:1;letter-spacing:.22em;font-size:9px}
+.s-jrn .pill{background:#2D6A4F;color:#fff;border-radius:4px;transform:rotate(2deg);font-size:10px}
+.s-jrn .hero-name{
+  font-size:17px;font-weight:600;margin-top:8px;line-height:1.35;
+  background:linear-gradient(transparent 64%,#FFE68A 64% 92%,transparent 92%);
+  display:inline-block;padding:0 2px
+}
+.s-jrn .hero-sub{font-size:10.5px;opacity:.55}
+.s-jrn .bar{background:#EFE8D4;height:5px;border-radius:2px}
+.s-jrn .bar i{background:repeating-linear-gradient(45deg,#8FBF9F 0 4px,#B8D8C3 4px 8px);border-radius:2px}
+.s-jrn .list{gap:2px}
+.s-jrn .row{background:transparent;border-bottom:1px dashed #DED6BE;border-radius:0;padding:10px 2px}
+.s-jrn .row-ic{
+  background:#FFE68A;border-radius:50%;color:#6B5510;font-size:10.5px;
+  box-shadow:1px 2px 0 rgba(120,100,40,.16)
+}
+.s-jrn .row-t b{font-size:12.5px;font-weight:600}
+.s-jrn .row-t span{font-size:10px;opacity:.48}
+.s-jrn .row-d{color:#D9542F;font-family:"Kaiti SC",KaiTi,serif}
+.s-jrn .chip{background:#fff;border:1px solid #E4DCC6;border-radius:5px;color:#7A6C4E;font-weight:500}
+.s-jrn .inp{background:#fff;border:1px solid #E4DCC6;border-radius:14px;box-shadow:2px 3px 0 rgba(140,125,90,.08)}
+.s-jrn .inp em{font-size:12px}
+.s-jrn .plus{background:#FFE68A;color:#6B5510;border-radius:8px;box-shadow:1.5px 2px 0 rgba(120,100,40,.2)}
+
+/* =========================================================
+   08 LIQUID CHROME
+========================================================= */
+.s-chr{background:#0a0b0e;color:#EDEFF3}
+.s-chr::before{
+  content:"";position:absolute;top:-45%;left:-40%;width:180%;height:180%;z-index:0;
+  background:conic-gradient(from 190deg at 50% 50%,
+    #12141a 0deg,#3b4454 42deg,#c8d1dd 78deg,#6b7686 112deg,
+    #14161c 150deg,#4a5566 208deg,#dfe6ef 246deg,#2a3140 288deg,#12141a 360deg);
+  filter:blur(42px);opacity:.55;animation:spin 26s linear infinite
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.s-chr .ava{
+  background:linear-gradient(150deg,#fbfdff,#93a0b1 44%,#eef3f9 72%,#7d8899);
+  color:#0b0c10;border-radius:50%;
+  box-shadow:0 5px 20px -4px rgba(210,225,255,.55),inset 0 -3px 8px rgba(0,0,0,.22)
+}
+.s-chr .hdr-t b{
+  background:linear-gradient(180deg,#ffffff,#9fa8b8 58%,#eef2f8);
+  -webkit-background-clip:text;background-clip:text;color:transparent
+}
+.s-chr .more{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:50%}
+.s-chr .hero{
+  background:rgba(255,255,255,.075);border:1px solid rgba(255,255,255,.22);border-radius:22px;
+  backdrop-filter:blur(18px);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 16px 34px -18px rgba(0,0,0,.9)
+}
+.s-chr .eyebrow{color:#cfd6e2;opacity:1}
+.s-chr .pill{background:rgba(255,255,255,.94);color:#0b0c10;box-shadow:0 2px 10px rgba(255,255,255,.25)}
+.s-chr .bar{background:rgba(255,255,255,.16)}
+.s-chr .bar i{background:linear-gradient(90deg,#ffffff,#8f9aab)}
+.s-chr .row{
+  background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.13);border-radius:16px;
+  backdrop-filter:blur(14px);box-shadow:inset 0 1px 0 rgba(255,255,255,.2)
+}
+.s-chr .row-ic{background:rgba(255,255,255,.14);color:#eef3f9;border-radius:50%}
+.s-chr .row-d{color:#ffffff}
+.s-chr .chip{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);color:#dfe4ec}
+.s-chr .inp{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.26);border-radius:18px;backdrop-filter:blur(14px);box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
+.s-chr .plus{background:linear-gradient(150deg,#ffffff,#97a2b3);color:#0b0c10;border-radius:11px}
+
+/* ---------- zoom ---------- */
+.zoom{
+  position:fixed;inset:0;z-index:999;display:grid;place-items:center;
+  background:rgba(18,19,24,.72);backdrop-filter:blur(10px);
+  animation:fade .22s ease;cursor:zoom-out;padding:20px
+}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.zoom .phone{animation:pop .3s cubic-bezier(.2,.9,.3,1.1);cursor:zoom-out}
+@keyframes pop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.zoom .tag{
+  position:absolute;bottom:26px;left:50%;transform:translateX(-50%);
+  font-size:12px;color:rgba(255,255,255,.75);letter-spacing:.08em
+}
+
+/* ---------- footer ---------- */
+.pfoot{
+  max-width:1320px;margin:70px auto 0;padding-top:26px;border-top:1px solid var(--line);
+  display:flex;flex-wrap:wrap;gap:18px 40px;align-items:flex-start
+}
+.pfoot h3{font-size:13px;font-weight:750;margin-bottom:8px}
+.pfoot p{font-size:12.5px;line-height:1.8;color:var(--muted);max-width:520px}
+.pfoot .col{flex:1 1 320px}
+
+@media (max-width:760px){
+  body{padding:34px 18px 70px}
+  .phead h1{font-size:27px}
+  .grid{gap:44px 20px}
+  .phone{width:100%;max-width:330px}
+  .thead{width:100%;max-width:330px}
+}
+</style>
+</head>
+<body>
+
+<header class="phead">
+  <div class="kicker"><i></i>WorkBuddy Agent · 首页视觉提案</div>
+  <h1>校园助理 · <em>8 套首页方案</em></h1>
+  <p>全部模板使用<strong>完全相同的内容结构</strong>——助理头像 / 名字 / 称呼、最近截止提醒、待办清单、对话输入框。这样你只需对比视觉气质，挑一个编号告诉我就行。点任意手机可放大查看。</p>
+  <div class="legend">
+    <span>内容一致 · 只比风格</span>
+    <span>移动端优先 <b>390×844</b></span>
+    <span>共 <b>8</b> 套</span>
+    <span>可再混搭/微调</span>
+  </div>
+</header>
+
+<main class="grid">
+
+  <!-- 01 -->
+  <article class="tpl">
+    <div class="thead">
+      <div class="tno">01</div>
+      <div class="tmeta">
+        <h2>极光玻璃<small>AURORA GLASS</small></h2>
+        <p>深色底 + 流动极光 + 毛玻璃。科技感、夜间耐看，最"AI 助手"。</p>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="screen s-aurora">
+        <div class="island"></div>
+        <div class="sb">
+          <span>21:04</span>
+          <span class="sb-i">
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="currentColor"><rect x="0" y="6" width="2.4" height="4" rx="1"/><rect x="3.6" y="4" width="2.4" height="6" rx="1"/><rect x="7.2" y="2" width="2.4" height="8" rx="1"/><rect x="10.8" y="0" width="2.4" height="10" rx="1" opacity=".35"/></svg>
+            <svg width="13" height="10" viewBox="0 0 13 10" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M1 3.6a8 8 0 0 1 11 0"/><path d="M3.4 6.2a4.8 4.8 0 0 1 6.2 0"/><circle cx="6.5" cy="8.5" r=".9" fill="currentColor" stroke="none"/></svg>
+            <svg width="20" height="10" viewBox="0 0 20 10" fill="none"><rect x=".6" y=".6" width="16" height="8.8" rx="2.4" stroke="currentColor" stroke-opacity=".5"/><rect x="2.2" y="2.2" width="11" height="5.6" rx="1.4" fill="currentColor"/><path d="M18.4 3.4v3.2c1-.3 1-.3 1-1.6s0-1.3-1-1.6z" fill="currentColor"/></svg>
+          </span>
+        </div>
+        <div class="body">
+          <div class="hdr">
+            <div class="ava">柚</div>
+            <div class="hdr-t"><b>小柚</b><span>晚上好呀，今天有 3 件事别忘啦</span></div>
+            <div class="more">⋯</div>
+          </div>
+          <div class="hero">
+            <div class="hero-top"><span class="eyebrow">最近截止</span><span class="pill">剩 3 天</span></div>
+            <div class="hero-name">数学建模国赛 · 报名</div>
+            <div class="hero-sub">11月15日 23:59 · 还剩 3 天 02:41</div>
+            <div class="bar"><i style="width:76%"></i></div>
+          </div>
+          <div class="list">
+            <div class="row"><div class="row-ic">数</div><div class="row-t"><b>数据结构实验报告</b><span>明天 20:00 前提交</span></div><span class="row-d">1 天</span></div>
+            <div class="row"><div class="row-ic">蓝</div><div class="row-t"><b>蓝桥杯校赛报名</b><span>11月24日 18:00</span></div><span class="row-d">12 天</span></div>
+            <div class="row"><div class="row-ic">英</div><div class="row-t"><b>四级准考证打印</b><span>11月20日 全天</span></div><span class="row-d">8 天</span></div>
+            <div class="row"><div class="row-ic">社</div><div class="row-t"><b>社团招新材料</b><span>11月18日 22:00</span></div><span class="row-d">6 天</span></div>
+          </div>
+          <div class="chips">
+            <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1.2" y="3.6" width="9.6" height="7" rx="2"/><circle cx="6" cy="7.1" r="2.1"/></svg>拍照记录</div>
+            <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="2.4" y="2.2" width="7.2" height="8.6" rx="1.6"/><path d="M4.6 2.2V1.4h2.8v.8"/></svg>粘贴通知</div>
+            <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="4.2" y="1" width="3.6" height="5.6" rx="1.8"/><path d="M2.6 5.8a3.4 3.4 0 0 0 6.8 0M6 9.4V11"/></svg>语音</div>
+          </div>
+          <div class="hint">截图丢进来，我自己认时间</div>
+        </div>
+        <div class="composer"><div class="inp"><em>把通知截图发我，或者直接说…</em><div class="plus">＋</div></div></div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 02 -->
+  <article class="tpl">
+    <div class="thead">
+      <div class="tno">02</div>
+      <div class="tmeta">
+        <h2>元气糖果<small>CANDY POP</small></h2>
+        <p>明亮撞色 + 粗描边 + 硬阴影。亲和力最强，一看就想按一下。</p>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="screen s-candy">
+        <div class="island"></div>
+        <div class="sb">
+          <span>21:04</span>
+          <span class="sb-i">
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="currentColor"><rect x="0" y="6" width="2.4" height="4" rx="1"/><rect x="3.6" y="4" width="2.4" height="6" rx="1"/><rect x="7.2" y="2" width="2.4" height="8" rx="1"/><rect x="10.8" y="0" width="2.4" height="10" rx="1" opacity=".35"/></svg>
+            <svg width="13" height="10" viewBox="0 0 13 10" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M1 3.6a8 8 0 0 1 11 0"/><path d="M3.4 6.2a4.8 4.8 0 0 1 6.2 0"/><circle cx="6.5" cy="8.5" r=".9" fill="currentColor" stroke="none"/></svg>
+            <svg width="20" height="10" viewBox="0 0 20 10" fill="none"><rect x=".6" y=".6" width="16" height="8.8" rx="2.4" stroke="currentColor" stroke-opacity=".5"/><rect x="2.2" y="2.2" width="11" height="5.6" rx="1.4" fill="currentColor"/><path d="M18.4 3.4v3.2c1-.3 1-.3 1-1.6s0-1.3-1-1.6z" fill="currentColor"/></svg>
+          </span>
+        </div>
+        <div class="body">
+          <div class="hdr">
+            <div class="ava">柚</div>
+            <div class="hdr-t"><b>小柚</b><span>晚上好呀，今天有 3 件事别忘啦</span></div>
+            <div class="more">⋯</div>
+          </div>
+          <div class="hero">
+            <div class="hero-top"><span class="eyebrow">最近截止</span><span class="pill">剩 3 天</span></div>
+            <div class="hero-name">数学建模国赛 · 报名</div>
+            <div class="hero-sub">11月15日 23:59 · 还剩 3 天 02:41</div>
+            <div class="bar"><i style="width:76%"></i></div>
+          </div>
+          <div class="list">
+            <div class="row"><div class="row-ic">数</div><div class="row-t"><b>数据结构实验报告</b><span>明天 20:00 前提交</span></div><span class="row-d">1 天</span></div>
+            <div class="row"><div class="row-ic">蓝</div><div class="row-t"><b>蓝桥杯校赛报名</b><span>11月24日 18:00</span></div><span class="row-d">12 天</span></div>
+            <div class="row"><div class="row-ic">英</div><div class="row-t"><b>四级准考证打印</b><span>11月20日 全天</span></div><span class="row-d">8 天</span></div>
+            <div class="row"><div class="row-ic">社</div><div class="row-t"><b>社团招新材料</b><span>11月18日 22:00</span></div><span class="row-d">6 天</span></div>
+          </div>
+          <div class="chips">
+            <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1.2" y="3.6" width="9.6" height="7" rx="2"/><circle cx="6" cy="7.1" r="2.1"/></svg>拍照记录</div>
+            <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="2.4" y="2.2" width="7.2" height="8.6" rx="1.6"/><path d="M4.6 2.2V1.4h2.8v.8"/></svg>粘贴通知</div>
+            <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="4.2" y="1" width="3.6" height="5.6" rx="1.8"/><path d="M2.6 5.8a3.4 3.4 0 0 0 6.8 0M6 9.4V11"/></svg>语音</div>
+          </div>
+          <div class="hint">截图丢进来，我自己认时间</div>
+        </div>
+        <div class="composer"><div class="inp"><em>把通知截图发我，或者直接说…</em><div class="plus">＋</div></div></div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 03 -->
+  <article class="tpl">
+    <div class="thead">
+      <div class="tno">03</div>
+      <div class="tmeta">
+        <h2>赛博终端<small>CYBER TERMINAL</small></h2>
+        <p>黑色终端 + 荧光绿扫描线。硬核、极客，男生宿舍最爱。</p>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="screen s-cyber">
+        <div class="island"></div>
+        <div class="sb">
+          <span>21:04</span>
+          <span class="sb-i">
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="currentColor"><rect x="0" y="6" width="2.4" height="4" rx="1"/><rect x="3.6" y="4" width="2.4" height="6" rx="1"/><rect x="7.2" y="2" width="2.4" height="8" rx="1"/><rect x="10.8" y="0" width="2.4" height="10" rx="1" opacity=".35"/></svg>
+            <svg width="13" height="10" viewBox="0 0 13 10" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M1 3.6a8 8 0 0 1 11 0"/><path d="M3.4 6.2a4.8 4.8 0 0 1 6.2 0"/><circle cx="6.5" cy="8.5" r=".9" fill="currentColor" stroke="none"/></svg>
+            <svg width="20" height="10" viewBox="0 0 20 10" fill="none"><rect x=".6" y=".6" width="16" height="8.8" rx="2.4" stroke="currentColor" stroke-opacity=".5"/><rect x="2.2" y="2.2" width="11" height="5.6" rx="1.4" fill="currentColor"/><path d="M18.4 3.4v3.2c1-.3 1-.3 1-1.6s0-1.3-1-1.6z" fill="currentColor"/></svg>
+          </span>
+        </div>
+        <div class="body">
+          <div class="hdr">
+            <div class="ava">柚</div>
+            <div class="hdr-t"><b>小柚</b><span>晚上好呀，今天有 3 件事别忘啦</span></div>
+            <div class="more">⋯</div>
+          </div>
+          <div class="hero">
+            <div class="hero-top"><span class="eyebrow">最近截止</span><span class="pill">剩 3 天</span></div>
+            <div class="hero-name">数学建模国赛 · 报名</div>
+            <div class="hero-sub">11月15日 23:59 · 还剩 3 天 02:41</div>
+            <div class="bar"><i style="width:76%"></i></div>
+          </div>
+          <div class="list">
+            <div class="row"><div class="row-ic">数</div><div class="row-t"><b>数据结构实验报告</b><span>明天 20:00 前提交</span></div><span class="row-d">1 天</span></div>
+            <div class="row"><div class="row-ic">蓝</div><div class="row-t"><b>蓝桥杯校赛报名</b><span>11月24日 18:00</span></div><span class="row-d">12 天</span></div>
+            <div class="row"><div class="row-ic">英</div><div class="row-t"><b>四级准考证打印</b><span>11月20日 全天</span></div><span class="row-d">8 天</span></div>
+            <div class="row"><div class="row-ic">社</div><div class="row-t"><b>社团招新材料</b><span>11月18日 22:00</span></div><span class="row-d">6 天</span></div>
+          </div>
+          <div class="chips">
+            <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1.2" y="3.6" width="9.6" height="7" rx="2"/><circle cx="6" cy="7.1" r="2.1"/></svg>拍照记录</div>
+            <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="2.4" y="2.2" width="7.2" height="8.6" rx="1.6"/><path d="M4.6 2.2V1.4h2.8v.8"/></svg>粘贴通知</div>
+            <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="4.2" y="1" width="3.6" height="5.6" rx="1.8"/><path d="M2.6 5.8a3.4 3.4 0 0 0 6.8 0M6 9.4V11"/></svg>语音</div>
+          </div>
+          <div class="hint">截图丢进来，我自己认时间</div>
+        </div>
+        <div class="composer"><div class="inp"><em>把通知截图发我，或者直接说…</em><div class="plus">＋</div></div></div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 04 -->
+  <article class="tpl">
+    <div class="thead">
+      <div class="tno">04</div>
+      <div class="tmeta">
+        <h2>极简纸感<small>QUIET PAPER</small></h2>
+        <p>米白纸面 + 衬线字 + 大留白。安静、高级，像一本好用的本子。</p>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="screen s-paper">
+        <div class="island"></div>
+        <div class="sb">
+          <span>21:04</span>
+          <span class="sb-i">
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="currentColor"><rect x="0" y="6" width="2.4" height="4" rx="1"/><rect x="3.6" y="4" width="2.4" height="6" rx="1"/><rect x="7.2" y="2" width="2.4" height="8" rx="1"/><rect x="10.8" y="0" width="2.4" height="10" rx="1" opacity=".35"/></svg>
+            <svg width="13" height="10" viewBox="0 0 13 10" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M1 3.6a8 8 0 0 1 11 0"/><path d="M3.4 6.2a4.8 4.8 0 0 1 6.2 0"/><circle cx="6.5" cy="8.5" r=".9" fill="currentColor" stroke="none"/></svg>
+            <svg width="20" height="10" viewBox="0 0 20 10" fill="none"><rect x=".6" y=".6" width="16" height="8.8" rx="2.4" stroke="currentColor" stroke-opacity=".5"/><rect x="2.2" y="2.2" width="11" height="5.6" rx="1.4" fill="currentColor"/><path d="M18.4 3.4v3.2c1-.3 1-.3 1-1.6s0-1.3-1-1.6z" fill="currentColor"/></svg>
+          </span>
+        </div>
+        <div class="body">
+          <div class="hdr">
+            <div class="ava">柚</div>
+            <div class="hdr-t"><b>小柚</b><span>晚上好呀，今天有 3 件事别忘啦</span></div>
+            <div class="more">⋯</div>
+          </div>
+          <div class="hero">
+            <div class="hero-top"><span class="eyebrow">最近截止</span><span class="pill">剩 3 天</span></div>
+            <div class="hero-name">数学建模国赛 · 报名</div>
+            <div class="hero-sub">11月15日 23:59 · 还剩 3 天 02:41</div>
+            <div class="bar"><i style="width:76%"></i></div>
+          </div>
+          <div class="list">
+            <div class="row"><div class="row-ic">01</div><div class="row-t"><b>数据结构实验报告</b><span>明天 20:00 前提交</span></div><span class="row-d">1 天</span></div>
+            <div class="row"><div class="row-ic">02</div><div class="row-t"><b>蓝桥杯校赛报名</b><span>11月24日 18:00</span></div><span class="row-d">12 天</span></div>
+            <div class="row"><div class="row-ic">03</div><div class="row-t"><b>四级准考证打印</b><span>11月20日 全天</span></div><span class="row-d">8 天</span></div>
+            <div class="row"><div class="row-ic">04</div><div class="row-t"><b>社团招新材料</b><span>11月18日 22:00</span></div><span class="row-d">6 天</span></div>
+          </div>
+          <div class="chips">
+            <div class="chip">拍照记录</div>
+            <div class="chip">粘贴通知</div>
+            <div class="chip">语音</div>
+          </div>
+          <div class="hint">截图丢进来，我自己认时间</div>
+        </div>
+        <div class="composer"><div class="inp"><em>把通知截图发我，或者直接说…</em><div class="plus">＋</div></div></div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 05 -->
+  <article class="tpl">
+    <div class="thead">
+      <div class="tno">05</div>
+      <div class="tmeta">
+        <h2>银河星空<small>GALAXY</small></h2>
+        <p>深空紫 + 星尘微光 + 星球头像。浪漫梦幻，适合做"陪伴型"人设。</p>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="screen s-gal">
+        <div class="island"></div>
+        <div class="sb">
+          <span>21:04</span>
+          <span class="sb-i">
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="currentColor"><rect x="0" y="6" width="2.4" height="4" rx="1"/><rect x="3.6" y="4" width="2.4" height="6" rx="1"/><rect x="7.2" y="2" width="2.4" height="8" rx="1"/><rect x="10.8" y="0" width="2.4" height="10" rx="1" opacity=".35"/></svg>
+            <svg width="13" height="10" viewBox="0 0 13 10" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M1 3.6a8 8 0 0 1 11 0"/><path d="M3.4 6.2a4.8 4.8 0 0 1 6.2 0"/><circle cx="6.5" cy="8.5" r=".9" fill="currentColor" stroke="none"/></svg>
+            <svg width="20" height="10" viewBox="0 0 20 10" fill="none"><rect x=".6" y=".6" width="16" height="8.8" rx="2.4" stroke="currentColor" stroke-opacity=".5"/><rect x="2.2" y="2.2" width="11" height="5.6" rx="1.4" fill="currentColor"/><path d="M18.4 3.4v3.2c1-.3 1-.3 1-1.6s0-1.3-1-1.6z" fill="currentColor"/></svg>
+          </span>
+        </div>
+        <div class="body">
+          <div class="hdr">
+            <div class="ava">柚</div>
+            <div class="hdr-t"><b>小柚</b><span>晚上好呀，今天有 3 件事别忘啦</span></div>
+            <div class="more">⋯</div>
+          </div>
+          <div class="hero">
+            <div class="hero-top"><span class="eyebrow">最近截止</span><span class="pill">剩 3 天</span></div>
+            <div class="hero-name">数学建模国赛 · 报名</div>
+            <div class="hero-sub">11月15日 23:59 · 还剩 3 天 02:41</div>
+            <div class="bar"><i style="width:76%"></i></div>
+          </div>
+          <div class="list">
+            <div class="row"><div class="row-ic">数</div><div class="row-t"><b>数据结构实验报告</b><span>明天 20:00 前提交</span></div><span class="row-d">1 天</span></div>
+            <div class="row"><div class="row-ic">蓝</div><div class="row-t"><b>蓝桥杯校赛报名</b><span>11月24日 18:00</span></div><span class="row-d">12 天</span></div>
+            <div class="row"><div class="row-ic">英</div><div class="row-t"><b>四级准考证打印</b><span>11月20日 全天</span></div><span class="row-d">8 天</span></div>
+            <div class="row"><div class="row-ic">社</div><div class="row-t"><b>社团招新材料</b><span>11月18日 22:00</span></div><span class="row-d">6 天</span></div>
+          </div>
+          <div class="chips">
+            <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1.2" y="3.6" width="9.6" height="7" rx="2"/><circle cx="6" cy="7.1" r="2.1"/></svg>拍照记录</div>
+            <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="2.4" y="2.2" width="7.2" height="8.6" rx="1.6"/><path d="M4.6 2.2V1.4h2.8v.8"/></svg>粘贴通知</div>
+            <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="4.2" y="1" width="3.6" height="5.6" rx="1.8"/><path d="M2.6 5.8a3.4 3.4 0 0 0 6.8 0M6 9.4V11"/></svg>语音</div>
+          </div>
+          <div class="hint">截图丢进来，我自己认时间</div>
+        </div>
+        <div class="composer"><div class="inp"><em>把通知截图发我，或者直接说…</em><div class="plus">＋</div></div></div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 06 -->
+  <article class="tpl">
+    <div class="thead">
+      <div class="tno">06</div>
+      <div class="tmeta">
+        <h2>粘土新拟态<small>SOFT CLAY</small></h2>
+        <p>柔和立体 + 马卡龙色，像可以捏一下的橡皮泥。治愈、无压迫感。</p>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="screen s-clay">
+        <div class="island"></div>
+        <div class="sb">
+          <span>21:04</span>
+          <span class="sb-i">
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="currentColor"><rect x="0" y="6" width="2.4" height="4" rx="1"/><rect x="3.6" y="4" width="2.4" height="6" rx="1"/><rect x="7.2" y="2" width="2.4" height="8" rx="1"/><rect x="10.8" y="0" width="2.4" height="10" rx="1" opacity=".35"/></svg>
+            <svg width="13" height="10" viewBox="0 0 13 10" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M1 3.6a8 8 0 0 1 11 0"/><path d="M3.4 6.2a4.8 4.8 0 0 1 6.2 0"/><circle cx="6.5" cy="8.5" r=".9" fill="currentColor" stroke="none"/></svg>
+            <svg width="20" height="10" viewBox="0 0 20 10" fill="none"><rect x=".6" y=".6" width="16" height="8.8" rx="2.4" stroke="currentColor" stroke-opacity=".5"/><rect x="2.2" y="2.2" width="11" height="5.6" rx="1.4" fill="currentColor"/><path d="M18.4 3.4v3.2c1-.3 1-.3 1-1.6s0-1.3-1-1.6z" fill="currentColor"/></svg>
+          </span>
+        </div>
+        <div class="body">
+          <div class="hdr">
+            <div class="ava">柚</div>
+            <div class="hdr-t"><b>小柚</b><span>晚上好呀，今天有 3 件事别忘啦</span></div>
+            <div class="more">⋯</div>
+          </div>
+          <div class="hero">
+            <div class="hero-top"><span class="eyebrow">最近截止</span><span class="pill">剩 3 天</span></div>
+            <div class="hero-name">数学建模国赛 · 报名</div>
+            <div class="hero-sub">11月15日 23:59 · 还剩 3 天 02:41</div>
+            <div class="bar"><i style="width:76%"></i></div>
+          </div>
+          <div class="list">
+            <div class="row"><div class="row-ic">数</div><div class="row-t"><b>数据结构实验报告</b><span>明天 20:00 前提交</span></div><span class="row-d">1 天</span></div>
+            <div class="row"><div class="row-ic">蓝</div><div class="row-t"><b>蓝桥杯校赛报名</b><span>11月24日 18:00</span></div><span class="row-d">12 天</span></div>
+            <div class="row"><div class="row-ic">英</div><div class="row-t"><b>四级准考证打印</b><span>11月20日 全天</span></div><span class="row-d">8 天</span></div>
+            <div class="row"><div class="row-ic">社</div><div class="row-t"><b>社团招新材料</b><span>11月18日 22:00</span></div><span class="row-d">6 天</span></div>
+          </div>
+          <div class="chips">
+            <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1.2" y="3.6" width="9.6" height="7" rx="2"/><circle cx="6" cy="7.1" r="2.1"/></svg>拍照记录</div>
+            <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="2.4" y="2.2" width="7.2" height="8.6" rx="1.6"/><path d="M4.6 2.2V1.4h2.8v.8"/></svg>粘贴通知</div>
+            <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="4.2" y="1" width="3.6" height="5.6" rx="1.8"/><path d="M2.6 5.8a3.4 3.4 0 0 0 6.8 0M6 9.4V11"/></svg>语音</div>
+          </div>
+          <div class="hint">截图丢进来，我自己认时间</div>
+        </div>
+        <div class="composer"><div class="inp"><em>把通知截图发我，或者直接说…</em><div class="plus">＋</div></div></div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 07 -->
+  <article class="tpl">
+    <div class="thead">
+      <div class="tno">07</div>
+      <div class="tmeta">
+        <h2>手账贴纸<small>STUDY JOURNAL</small></h2>
+        <p>方格纸 + 胶带 + 荧光笔。最"学生气"，和校园场景天然贴合。</p>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="screen s-jrn">
+        <div class="island"></div>
+        <div class="sb">
+          <span>21:04</span>
+          <span class="sb-i">
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="currentColor"><rect x="0" y="6" width="2.4" height="4" rx="1"/><rect x="3.6" y="4" width="2.4" height="6" rx="1"/><rect x="7.2" y="2" width="2.4" height="8" rx="1"/><rect x="10.8" y="0" width="2.4" height="10" rx="1" opacity=".35"/></svg>
+            <svg width="13" height="10" viewBox="0 0 13 10" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M1 3.6a8 8 0 0 1 11 0"/><path d="M3.4 6.2a4.8 4.8 0 0 1 6.2 0"/><circle cx="6.5" cy="8.5" r=".9" fill="currentColor" stroke="none"/></svg>
+            <svg width="20" height="10" viewBox="0 0 20 10" fill="none"><rect x=".6" y=".6" width="16" height="8.8" rx="2.4" stroke="currentColor" stroke-opacity=".5"/><rect x="2.2" y="2.2" width="11" height="5.6" rx="1.4" fill="currentColor"/><path d="M18.4 3.4v3.2c1-.3 1-.3 1-1.6s0-1.3-1-1.6z" fill="currentColor"/></svg>
+          </span>
+        </div>
+        <div class="body">
+          <div class="hdr">
+            <div class="ava">柚</div>
+            <div class="hdr-t"><b>小柚</b><span>晚上好呀，今天有 3 件事别忘啦</span></div>
+            <div class="more">⋯</div>
+          </div>
+          <div class="hero">
+            <div class="hero-top"><span class="eyebrow">最近截止</span><span class="pill">剩 3 天</span></div>
+            <div class="hero-name">数学建模国赛 · 报名</div>
+            <div class="hero-sub">11月15日 23:59 · 还剩 3 天 02:41</div>
+            <div class="bar"><i style="width:76%"></i></div>
+          </div>
+          <div class="list">
+            <div class="row"><div class="row-ic">数</div><div class="row-t"><b>数据结构实验报告</b><span>明天 20:00 前提交</span></div><span class="row-d">1 天</span></div>
+            <div class="row"><div class="row-ic">蓝</div><div class="row-t"><b>蓝桥杯校赛报名</b><span>11月24日 18:00</span></div><span class="row-d">12 天</span></div>
+            <div class="row"><div class="row-ic">英</div><div class="row-t"><b>四级准考证打印</b><span>11月20日 全天</span></div><span class="row-d">8 天</span></div>
+            <div class="row"><div class="row-ic">社</div><div class="row-t"><b>社团招新材料</b><span>11月18日 22:00</span></div><span class="row-d">6 天</span></div>
+          </div>
+          <div class="chips">
+            <div class="chip">拍照记录</div>
+            <div class="chip">粘贴通知</div>
+            <div class="chip">语音</div>
+          </div>
+          <div class="hint">截图丢进来，我自己认时间</div>
+        </div>
+        <div class="composer"><div class="inp"><em>把通知截图发我，或者直接说…</em><div class="plus">＋</div></div></div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 08 -->
+  <article class="tpl">
+    <div class="thead">
+      <div class="tno">08</div>
+      <div class="tmeta">
+        <h2>液态镜面<small>LIQUID CHROME</small></h2>
+        <p>流动金属 + 强高光。最新潮的"液态玻璃"风，辨识度最高。</p>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="screen s-chr">
+        <div class="island"></div>
+        <div class="sb">
+          <span>21:04</span>
+          <span class="sb-i">
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="currentColor"><rect x="0" y="6" width="2.4" height="4" rx="1"/><rect x="3.6" y="4" width="2.4" height="6" rx="1"/><rect x="7.2" y="2" width="2.4" height="8" rx="1"/><rect x="10.8" y="0" width="2.4" height="10" rx="1" opacity=".35"/></svg>
+            <svg width="13" height="10" viewBox="0 0 13 10" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M1 3.6a8 8 0 0 1 11 0"/><path d="M3.4 6.2a4.8 4.8 0 0 1 6.2 0"/><circle cx="6.5" cy="8.5" r=".9" fill="currentColor" stroke="none"/></svg>
+            <svg width="20" height="10" viewBox="0 0 20 10" fill="none"><rect x=".6" y=".6" width="16" height="8.8" rx="2.4" stroke="currentColor" stroke-opacity=".5"/><rect x="2.2" y="2.2" width="11" height="5.6" rx="1.4" fill="currentColor"/><path d="M18.4 3.4v3.2c1-.3 1-.3 1-1.6s0-1.3-1-1.6z" fill="currentColor"/></svg>
+          </span>
+        </div>
+        <div class="body">
+          <div class="hdr">
+            <div class="ava">柚</div>
+            <div class="hdr-t"><b>小柚</b><span>晚上好呀，今天有 3 件事别忘啦</span></div>
+            <div class="more">⋯</div>
+          </div>
+          <div class="hero">
+            <div class="hero-top"><span class="eyebrow">最近截止</span><span class="pill">剩 3 天</span></div>
+            <div class="hero-name">数学建模国赛 · 报名</div>
+            <div class="hero-sub">11月15日 23:59 · 还剩 3 天 02:41</div>
+            <div class="bar"><i style="width:76%"></i></div>
+          </div>
+          <div class="list">
+            <div class="row"><div class="row-ic">数</div><div class="row-t"><b>数据结构实验报告</b><span>明天 20:00 前提交</span></div><span class="row-d">1 天</span></div>
+            <div class="row"><div class="row-ic">蓝</div><div class="row-t"><b>蓝桥杯校赛报名</b><span>11月24日 18:00</span></div><span class="row-d">12 天</span></div>
+            <div class="row"><div class="row-ic">英</div><div class="row-t"><b>四级准考证打印</b><span>11月20日 全天</span></div><span class="row-d">8 天</span></div>
+            <div class="row"><div class="row-ic">社</div><div class="row-t"><b>社团招新材料</b><span>11月18日 22:00</span></div><span class="row-d">6 天</span></div>
+          </div>
+          <div class="chips">
+            <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1.2" y="3.6" width="9.6" height="7" rx="2"/><circle cx="6" cy="7.1" r="2.1"/></svg>拍照记录</div>
+            <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="2.4" y="2.2" width="7.2" height="8.6" rx="1.6"/><path d="M4.6 2.2V1.4h2.8v.8"/></svg>粘贴通知</div>
+            <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="4.2" y="1" width="3.6" height="5.6" rx="1.8"/><path d="M2.6 5.8a3.4 3.4 0 0 0 6.8 0M6 9.4V11"/></svg>语音</div>
+          </div>
+          <div class="hint">截图丢进来，我自己认时间</div>
+        </div>
+        <div class="composer"><div class="inp"><em>把通知截图发我，或者直接说…</em><div class="plus">＋</div></div></div>
+      </div>
+    </div>
+  </article>
+
+</main>
+
+<footer class="pfoot">
+  <div class="col">
+    <h3>怎么挑</h3>
+    <p>先看整体气质对不对，再看细节。喜欢两种也行，比如"01 的深色 + 02 的圆角按钮"，我可以在选定方向上做混搭。</p>
+  </div>
+  <div class="col">
+    <h3>下一步</h3>
+    <p>告诉我编号，我再按这套视觉去写 WorkBuddy 的 Agent 提示词（含助理人设、截图识别规则、记事本结构、开场白），并把首页做成真正可跑的样子。</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var zoom = null;
+  document.querySelectorAll('.phone').forEach(function(p){
+    p.addEventListener('click', function(e){
+      e.stopPropagation();
+      if (zoom) return;
+      var s = Math.min(1.62, (window.innerHeight - 90) / 672, (window.innerWidth - 80) / 330);
+      zoom = document.createElement('div');
+      zoom.className = 'zoom';
+      var clone = p.cloneNode(true);
+      clone.style.transform = 'scale(' + s + ')';
+      clone.style.transition = 'none';
+      var tag = document.createElement('div');
+      tag.className = 'tag';
+      var t = p.closest('.tpl').querySelector('.tmeta h2');
+      tag.textContent = (t ? t.textContent : '') + ' · 点击任意处关闭';
+      zoom.appendChild(clone);
+      zoom.appendChild(tag);
+      document.body.appendChild(zoom);
+      document.body.style.overflow = 'hidden';
+      zoom.addEventListener('click', function(){
+        zoom.remove(); zoom = null; document.body.style.overflow = '';
+      });
+    });
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && zoom) { zoom.remove(); zoom = null; document.body.style.overflow = ''; }
+  });
+})();
+</script>
+</body>
+</html>

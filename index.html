@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="candy">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#FFF4E2">
+<title>校园助理 · 小助理</title>
+<style>
+/* ================= 基础 ================= */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --font: -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+}
+html,body{height:100%}
+html[data-theme="candy"]{color-scheme:light}
+html[data-theme="aurora"]{color-scheme:dark}
+body{
+  font-family:var(--font);
+  background:#ECEBEF;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;border:0;background:none;cursor:pointer;color:inherit}
+input,textarea{font-family:inherit;border:0;outline:0;background:none;color:inherit}
+img{display:block}
+
+/* ================= 外壳 ================= */
+.app{
+  position:relative;width:100%;max-width:440px;height:100dvh;
+  display:flex;flex-direction:column;overflow:hidden;
+  transition:background .45s ease;
+}
+@media (min-width:720px){
+  body{padding:26px}
+  .app{
+    height:min(880px, calc(100dvh - 52px));
+    border-radius:40px;
+    box-shadow:0 50px 90px -40px rgba(24,22,40,.5), 0 0 0 1px rgba(20,18,30,.06);
+  }
+}
+
+/* ================= 主题：元气糖果（默认） ================= */
+html[data-theme="candy"] .app{
+  background:linear-gradient(168deg,#FFF4E2 0%,#FFE8F1 46%,#E7F7F3 100%);
+  color:#231F1C;
+}
+html[data-theme="candy"] .app::before{
+  content:"";position:absolute;width:260px;height:260px;border-radius:50%;
+  top:-90px;right:-90px;pointer-events:none;
+  background:radial-gradient(circle,rgba(255,122,89,.30),transparent 68%);
+}
+html[data-theme="candy"] .app::after{
+  content:"";position:absolute;width:240px;height:240px;border-radius:50%;
+  bottom:70px;left:-110px;pointer-events:none;
+  background:radial-gradient(circle,rgba(78,205,196,.28),transparent 68%);
+}
+[data-theme="candy"] .topbar{color:#231F1C}
+[data-theme="candy"] .greet{color:rgba(35,31,28,.55)}
+[data-theme="candy"] .avatar{
+  background:#FFD23F;border:2.5px solid #231F1C;box-shadow:3px 3px 0 #231F1C;color:#231F1C
+}
+[data-theme="candy"] .icon-btn{
+  background:#fff;border:2px solid #231F1C;box-shadow:2px 2px 0 #231F1C;border-radius:9px
+}
+[data-theme="candy"] .card{
+  background:#fff;border:2.5px solid #231F1C;border-radius:22px;box-shadow:6px 6px 0 #FF7A59
+}
+[data-theme="candy"] .eyebrow{color:#FF7A59}
+[data-theme="candy"] .pill{
+  background:#FF7A59;color:#fff;border:2px solid #231F1C;font-weight:850;padding:3px 10px;border-radius:99px
+}
+[data-theme="candy"] .pill.warn{background:#231F1C;color:#FFD23F}
+[data-theme="candy"] .btn-main{
+  background:#FF7A59;color:#fff;border:2.5px solid #231F1C;box-shadow:3px 3px 0 #231F1C;border-radius:12px
+}
+[data-theme="candy"] .bar{background:#F2E7DA;border:1.5px solid #231F1C;height:8px}
+[data-theme="candy"] .bar i{background:repeating-linear-gradient(45deg,#4ECDC4 0 5px,#6FE0D8 5px 10px)}
+[data-theme="candy"] .item{
+  background:#fff;border:2px solid #231F1C;border-radius:16px;box-shadow:3.5px 3.5px 0 #FFD23F
+}
+[data-theme="candy"] .item-ic{background:#FFE9DE;border:1.5px solid #231F1C;color:#E0552F;border-radius:8px}
+[data-theme="candy"] .item-d{background:#231F1C;color:#fff;border-radius:6px;padding:2.5px 7px}
+[data-theme="candy"] .item-d.soon{background:#FF7A59}
+[data-theme="candy"] .chip{
+  background:#fff;border:2px solid #231F1C;box-shadow:2.5px 2.5px 0 #4ECDC4;border-radius:99px;font-weight:750
+}
+[data-theme="candy"] .composer-in{
+  background:#fff;border:2.5px solid #231F1C;box-shadow:3.5px 3.5px 0 #4ECDC4;border-radius:18px
+}
+[data-theme="candy"] .send{background:#FF7A59;color:#fff;border:2px solid #231F1C;border-radius:10px}
+[data-theme="candy"] .tabbar{
+  background:rgba(255,255,255,.82);border-top:2px solid #231F1C;backdrop-filter:blur(14px)
+}
+[data-theme="candy"] .tab{color:rgba(35,31,28,.45)}
+[data-theme="candy"] .tab.on{color:#231F1C}
+[data-theme="candy"] .tab.on .dot{background:#FF7A59;border:1.5px solid #231F1C}
+[data-theme="candy"] .bubble-a{
+  background:#fff;border:2px solid #231F1C;border-radius:16px 16px 16px 5px;box-shadow:3px 3px 0 #FFD23F
+}
+[data-theme="candy"] .bubble-u{
+  background:#231F1C;color:#fff;border:2px solid #231F1C;border-radius:16px 16px 5px 16px
+}
+[data-theme="candy"] .sheet{
+  background:#FFF8EE;border:2.5px solid #231F1C;border-radius:26px 26px 0 0;box-shadow:0 -10px 40px rgba(35,31,28,.18)
+}
+[data-theme="candy"] .field{
+  background:#fff;border:2px solid #231F1C;border-radius:13px
+}
+[data-theme="candy"] .theme-card{border:2px solid #231F1C;border-radius:16px;box-shadow:3px 3px 0 #FFD23F}
+[data-theme="candy"] .theme-card.on{box-shadow:3px 3px 0 #FF7A59;border-width:2.5px}
+[data-theme="candy"] .sec-title{color:rgba(35,31,28,.5)}
+[data-theme="candy"] .hint{color:rgba(35,31,28,.42)}
+[data-theme="candy"] .empty{color:rgba(35,31,28,.4)}
+
+/* ================= 主题：极光玻璃 ================= */
+html[data-theme="aurora"] .app{
+  background:#070a1c;color:#fff;
+}
+html[data-theme="aurora"] .app::before{
+  content:"";position:absolute;inset:-30%;pointer-events:none;
+  background:
+    radial-gradient(44% 36% at 16% 8%,rgba(139,92,246,.95),transparent 60%),
+    radial-gradient(36% 30% at 86% 16%,rgba(56,189,248,.8),transparent 62%),
+    radial-gradient(46% 34% at 70% 86%,rgba(236,72,153,.6),transparent 64%),
+    radial-gradient(28% 22% at 6% 70%,rgba(45,212,191,.42),transparent 66%);
+  filter:blur(34px);animation:auroraShift 16s ease-in-out infinite alternate
+}
+html[data-theme="aurora"] .app::after{content:none}
+@keyframes auroraShift{to{transform:translate3d(4%,3%,0) scale(1.1) rotate(8deg)}}
+[data-theme="aurora"] .topbar{color:#fff}
+[data-theme="aurora"] .greet{color:rgba(255,255,255,.56)}
+[data-theme="aurora"] .avatar{
+  background:linear-gradient(140deg,#a78bfa,#22d3ee);color:#070d20;
+  box-shadow:0 8px 24px -6px rgba(124,58,237,.8)
+}
+[data-theme="aurora"] .icon-btn{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);border-radius:9px}
+[data-theme="aurora"] .card{
+  background:linear-gradient(150deg,rgba(255,255,255,.17),rgba(255,255,255,.04));
+  border:1px solid rgba(255,255,255,.17);border-radius:22px;
+  backdrop-filter:blur(16px);box-shadow:0 20px 44px -24px rgba(0,0,0,.9)
+}
+[data-theme="aurora"] .eyebrow{color:rgba(255,255,255,.6)}
+[data-theme="aurora"] .pill{
+  background:linear-gradient(135deg,#a78bfa,#22d3ee);color:#06091a;font-weight:850;
+  padding:4px 10px;border-radius:99px;box-shadow:0 4px 16px -4px rgba(34,211,238,.8)
+}
+[data-theme="aurora"] .pill.warn{background:rgba(255,255,255,.92);color:#0b0c10}
+[data-theme="aurora"] .btn-main{
+  background:linear-gradient(135deg,#a78bfa,#22d3ee);color:#070c1e;
+  border-radius:12px;box-shadow:0 8px 22px -8px rgba(34,211,238,.9)
+}
+[data-theme="aurora"] .bar{background:rgba(255,255,255,.14);height:5px}
+[data-theme="aurora"] .bar i{background:linear-gradient(90deg,#a78bfa,#22d3ee);box-shadow:0 0 12px rgba(34,211,238,.75)}
+[data-theme="aurora"] .item{
+  background:rgba(255,255,255,.065);border:1px solid rgba(255,255,255,.1);border-radius:16px
+}
+[data-theme="aurora"] .item-ic{background:rgba(167,139,250,.2);color:#c4b5fd;border-radius:9px}
+[data-theme="aurora"] .item-d{color:#7dd3fc}
+[data-theme="aurora"] .item-d.soon{color:#fda4af}
+[data-theme="aurora"] .chip{
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.88);
+  border-radius:99px
+}
+[data-theme="aurora"] .composer-in{
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:18px;backdrop-filter:blur(14px)
+}
+[data-theme="aurora"] .send{background:linear-gradient(135deg,#a78bfa,#22d3ee);color:#070c1e;border-radius:10px}
+[data-theme="aurora"] .tabbar{
+  background:rgba(10,12,32,.72);border-top:1px solid rgba(255,255,255,.1);backdrop-filter:blur(18px)
+}
+[data-theme="aurora"] .tab{color:rgba(255,255,255,.42)}
+[data-theme="aurora"] .tab.on{color:#fff}
+[data-theme="aurora"] .tab.on .dot{background:linear-gradient(135deg,#a78bfa,#22d3ee)}
+[data-theme="aurora"] .bubble-a{
+  background:linear-gradient(150deg,rgba(255,255,255,.16),rgba(255,255,255,.05));
+  border:1px solid rgba(255,255,255,.15);border-radius:16px 16px 16px 5px
+}
+[data-theme="aurora"] .bubble-u{
+  background:linear-gradient(135deg,#a78bfa,#22d3ee);color:#070c1e;
+  border-radius:16px 16px 5px 16px
+}
+[data-theme="aurora"] .sheet{
+  background:#0d1030;border:1px solid rgba(255,255,255,.12);border-radius:26px 26px 0 0;
+  box-shadow:0 -12px 50px rgba(0,0,0,.7)
+}
+[data-theme="aurora"] .field{
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:13px
+}
+[data-theme="aurora"] .theme-card{border:1px solid rgba(255,255,255,.2);border-radius:16px}
+[data-theme="aurora"] .theme-card.on{border:2px solid #7dd3fc;box-shadow:0 0 24px -6px rgba(125,211,252,.7)}
+[data-theme="aurora"] .sec-title{color:rgba(255,255,255,.42)}
+[data-theme="aurora"] .hint{color:rgba(255,255,255,.4)}
+[data-theme="aurora"] .empty{color:rgba(255,255,255,.4)}
+
+/* ================= 顶栏 ================= */
+.topbar{
+  position:relative;z-index:5;flex:none;
+  display:flex;align-items:center;gap:11px;
+  padding:calc(18px + env(safe-area-inset-top,0px)) 18px 10px
+}
+.avatar{
+  width:46px;height:46px;border-radius:50%;flex:none;
+  display:grid;place-items:center;overflow:hidden;
+  font-size:17px;font-weight:850;letter-spacing:.02em;
+  transition:transform .2s
+}
+.avatar:active{transform:scale(.94)}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.who{min-width:0;flex:1;display:flex;flex-direction:column;gap:3px}
+.who b{font-size:16px;font-weight:800;letter-spacing:-.01em;line-height:1.15}
+.greet{font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.icon-btn{width:30px;height:30px;flex:none;display:grid;place-items:center;font-size:14px;letter-spacing:1px}
+
+/* ================= 视图 ================= */
+.views{position:relative;flex:1;min-height:0;z-index:4}
+.view{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;
+  padding:6px 18px 16px;
+  opacity:0;pointer-events:none;transform:translateY(8px);
+  transition:opacity .22s ease, transform .22s ease;
+  -webkit-overflow-scrolling:touch
+}
+.view.on{opacity:1;pointer-events:auto;transform:none}
+.view::-webkit-scrollbar{width:0}
+#view-home{display:flex;flex-direction:column}
+#view-home .chips{margin-top:auto}
+
+/* ================= 首页 ================= */
+.card{
+  border-radius:22px;padding:15px 16px 15px;
+  display:flex;flex-direction:column;gap:4px;
+  position:relative;overflow:hidden
+}
+.card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.eyebrow{font-size:9.5px;font-weight:850;letter-spacing:.15em;text-transform:uppercase}
+.pill{font-size:10.5px;font-weight:800;white-space:nowrap}
+.card h2{font-size:16.5px;font-weight:800;letter-spacing:-.015em;line-height:1.28;margin-top:6px}
+.card .sub{font-size:11px;opacity:.6;margin-top:1px}
+.bar{height:5px;border-radius:99px;margin-top:11px;overflow:hidden;flex:none}
+.bar i{display:block;height:100%;border-radius:99px;transition:width .6s cubic-bezier(.2,.8,.3,1)}
+
+.week{display:flex;gap:6px;margin:18px 0 2px}
+.day{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:9px 0 10px;border-radius:13px;transition:.2s
+}
+.day i{font-style:normal;font-size:9px;font-weight:800;letter-spacing:.06em;opacity:.45;line-height:1.1}
+.day b{font-size:12px;font-weight:850;letter-spacing:-.01em;line-height:1.1}
+.day .pt{width:4px;height:4px;border-radius:50%;background:currentColor;opacity:0;transition:.2s;flex:none}
+.day.has .pt{opacity:.55}
+[data-theme="candy"] .day{background:#fff;border:1.5px solid #231F1C;box-shadow:2px 2px 0 #FFD23F}
+[data-theme="candy"] .day.today{background:#FF7A59;color:#fff;box-shadow:2px 2px 0 #231F1C}
+[data-theme="candy"] .day.today i{opacity:.85}
+[data-theme="candy"] .day.today .pt{background:#fff;opacity:1}
+[data-theme="aurora"] .day{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}
+[data-theme="aurora"] .day.today{background:linear-gradient(135deg,#a78bfa,#22d3ee);color:#070c1e;border-color:transparent;box-shadow:0 6px 18px -8px rgba(34,211,238,.9)}
+[data-theme="aurora"] .day.today i{opacity:.7}
+[data-theme="aurora"] .day.today .pt{background:#070c1e;opacity:.7}
+
+.stats{display:flex;margin:17px 2px 0}
+.stat{flex:1;min-width:0}
+.stat b{display:block;font-size:15.5px;font-weight:850;letter-spacing:-.015em;line-height:1.2}
+.stat span{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;opacity:.45}
+.stat + .stat{border-left:1px solid rgba(0,0,0,.1);padding-left:15px;margin-left:15px}
+[data-theme="aurora"] .stat + .stat{border-left-color:rgba(255,255,255,.15)}
+
+.sec{display:flex;align-items:center;justify-content:space-between;margin:18px 2px 9px}
+.sec-title{font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+
+.list{display:flex;flex-direction:column;gap:9px}
+.item{
+  display:flex;align-items:center;gap:11px;
+  padding:12px 13px;border-radius:16px;
+  transition:transform .15s ease
+}
+.item:active{transform:scale(.985)}
+.item-ic{
+  width:30px;height:30px;border-radius:9px;flex:none;
+  display:grid;place-items:center;font-size:11.5px;font-weight:850
+}
+.item-t{min-width:0;flex:1;display:flex;flex-direction:column;gap:3px}
+.item-t b{font-size:13px;font-weight:700;letter-spacing:-.005em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-t span{font-size:10.5px;opacity:.55}
+.item-d{font-size:10.5px;font-weight:850;flex:none;white-space:nowrap}
+.item.done{opacity:.45}
+.item.done .item-t b{text-decoration:line-through}
+
+.chips{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+.chip{
+  font-size:11px;padding:8px 13px;display:flex;align-items:center;gap:6px;
+  transition:transform .12s
+}
+.chip:active{transform:scale(.95)}
+
+.hero-empty{
+  border-radius:22px;padding:22px 18px;text-align:center;font-size:12.5px;line-height:1.7;opacity:.75
+}
+
+/* ================= 对话 ================= */
+#view-chat{padding-bottom:8px;display:flex;flex-direction:column}
+#view-chat .msg:first-child{margin-top:auto}
+.msg{display:flex;gap:9px;margin-bottom:14px;align-items:flex-end}
+.msg .mini{
+  width:30px;height:30px;border-radius:50%;flex:none;display:grid;place-items:center;
+  font-size:11px;font-weight:850;overflow:hidden
+}
+.msg .mini img{width:100%;height:100%;object-fit:cover}
+.bubble{
+  max-width:76%;padding:11px 14px;font-size:12.8px;line-height:1.66;
+  letter-spacing:.005em;word-break:break-word;white-space:pre-wrap
+}
+.msg.u{flex-direction:row-reverse}
+.bubble-u{max-width:76%;padding:11px 14px;font-size:12.8px;line-height:1.66;word-break:break-word}
+.typing{display:flex;gap:4px;padding:14px}
+.typing i{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.4;animation:tp 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.16s}
+.typing i:nth-child(3){animation-delay:.32s}
+@keyframes tp{0%,60%,100%{transform:translateY(0);opacity:.35}30%{transform:translateY(-4px);opacity:.9}}
+
+[data-theme="aurora"] .msg .mini{background:linear-gradient(140deg,#a78bfa,#22d3ee);color:#070d20}
+[data-theme="candy"] .msg .mini{background:#FFD23F;color:#231F1C}
+
+/* ================= 记事本 ================= */
+.note-group{margin-bottom:18px}
+.note-head{
+  display:flex;align-items:center;gap:8px;margin:0 2px 9px;
+  font-size:10.5px;font-weight:850;letter-spacing:.13em;text-transform:uppercase;opacity:.55
+}
+.note-head em{font-style:normal;opacity:.7;letter-spacing:0;font-weight:700}
+.note-item{
+  display:flex;align-items:flex-start;gap:11px;padding:13px;border-radius:16px;margin-bottom:8px;
+  transition:transform .15s
+}
+[data-theme="candy"] .note-item{
+  background:#fff;border:2px solid #231F1C;box-shadow:3.5px 3.5px 0 #FFD23F
+}
+[data-theme="candy"] .note-item.done{box-shadow:3.5px 3.5px 0 #E7E0D2;background:#FBFAF7}
+[data-theme="aurora"] .note-item{
+  background:rgba(255,255,255,.065);border:1px solid rgba(255,255,255,.1)
+}
+.note-foot{
+  text-align:center;font-size:10px;opacity:.35;padding:14px 0 26px;line-height:1.7
+}
+.note-item:active{transform:scale(.985)}
+.check{
+  width:20px;height:20px;border-radius:50%;flex:none;margin-top:1px;
+  display:grid;place-items:center;font-size:11px;font-weight:900;
+  border:2px solid currentColor;opacity:.5;transition:.18s
+}
+.note-item.done .check{opacity:1;background:currentColor;color:transparent}
+.note-item.done .check::after{content:"✓";color:#fff;font-size:11px}
+.note-item.done .note-t b{text-decoration:line-through;opacity:.55}
+.note-t{flex:1;min-width:0}
+.note-t b{font-size:13px;font-weight:700;display:block;line-height:1.35}
+.note-t p{font-size:10.8px;opacity:.55;margin-top:3px;line-height:1.5}
+.note-r{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex:none}
+.note-d{font-size:10px;font-weight:850;white-space:nowrap}
+.tag{font-size:9px;font-weight:800;padding:2px 6px;border-radius:5px;border:1.5px solid currentColor;opacity:.6}
+.empty{text-align:center;font-size:12px;padding:40px 20px;line-height:1.8}
+
+/* ================= 输入区 ================= */
+.composer{
+  position:relative;z-index:6;flex:none;
+  padding:8px 16px 10px;display:none
+}
+.composer.on{display:block}
+.composer-in{
+  display:flex;align-items:flex-end;gap:8px;padding:8px 8px 8px 14px
+}
+.composer-in textarea{
+  flex:1;font-size:12.8px;line-height:1.5;resize:none;max-height:84px;
+  padding:6px 0;background:transparent
+}
+.composer-in textarea::placeholder{opacity:.42}
+.mini-btn{
+  width:30px;height:30px;flex:none;display:grid;place-items:center;border-radius:9px;font-size:15px;opacity:.55
+}
+.send{
+  width:32px;height:32px;flex:none;display:grid;place-items:center;
+  font-size:14px;font-weight:900;transition:transform .12s
+}
+.send:active{transform:scale(.9)}
+
+/* ================= 底栏 ================= */
+.tabbar{
+  position:relative;z-index:7;flex:none;
+  display:flex;align-items:center;
+  padding:9px 8px calc(9px + var(--safe-b));
+}
+.tab{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;
+  font-size:10px;font-weight:750;letter-spacing:.02em;
+  padding:3px 0;transition:color .2s
+}
+.tab .dot{
+  width:20px;height:20px;border-radius:7px;display:grid;place-items:center;
+  background:transparent;transition:.2s
+}
+.tab .dot svg{width:13px;height:13px}
+.tab.on .dot{transform:translateY(-1px)}
+
+/* ================= 弹层 ================= */
+.mask{
+  position:absolute;inset:0;z-index:20;
+  background:rgba(15,14,22,.42);backdrop-filter:blur(3px);
+  opacity:0;pointer-events:none;transition:opacity .25s
+}
+.mask.on{opacity:1;pointer-events:auto}
+.sheet{
+  position:absolute;left:0;right:0;bottom:0;z-index:21;
+  padding:18px 20px calc(22px + var(--safe-b));
+  transform:translateY(102%);transition:transform .32s cubic-bezier(.2,.9,.25,1);
+  max-height:88%;overflow-y:auto
+}
+.sheet.on{transform:none}
+.sheet-handle{
+  width:38px;height:4px;border-radius:99px;background:currentColor;opacity:.2;
+  margin:0 auto 16px
+}
+.sheet h3{font-size:16px;font-weight:850;margin-bottom:4px}
+.sheet-close{position:absolute;top:12px;right:14px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;opacity:.45;transition:.15s}
+.sheet-close:active{transform:scale(.9)}
+.sheet .desc{font-size:11.5px;opacity:.55;margin-bottom:18px;line-height:1.6}
+.pair{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.field{
+  width:100%;padding:11px 13px;font-size:13px;border-radius:13px;
+  color:inherit;font-weight:600
+}
+.field::placeholder{opacity:.4;font-weight:400}
+.row2{display:flex;gap:10px}
+.row2>*{flex:1}
+.sec-title2{font-size:10px;font-weight:850;letter-spacing:.14em;text-transform:uppercase;opacity:.45;margin:0 0 9px 2px}
+.ava-grid{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:16px}
+.ava-opt{
+  width:44px;height:44px;border-radius:50%;display:grid;place-items:center;
+  font-size:15px;font-weight:800;position:relative;overflow:hidden;
+  border:2px solid transparent;transition:.15s
+}
+.ava-opt.on{border-color:currentColor;transform:scale(1.06)}
+.ava-opt img{width:100%;height:100%;object-fit:cover}
+.theme-row{display:flex;gap:11px;margin-bottom:16px}
+.theme-card{
+  flex:1;padding:9px;border-radius:16px;position:relative;
+  display:flex;flex-direction:column;gap:8px;
+  transition:.18s;cursor:pointer
+}
+.theme-card.on{transform:translateY(-2px)}
+.theme-prev{
+  height:62px;border-radius:11px;position:relative;overflow:hidden;flex:none
+}
+.tp-candy{background:linear-gradient(160deg,#FFF4E2,#FFE8F1 50%,#E7F7F3);display:flex;align-items:center;justify-content:center}
+.tp-candy span{width:70%;height:22px;background:#fff;border:1.5px solid #231F1C;border-radius:6px;box-shadow:2px 2px 0 #FF7A59;display:block}
+.tp-aurora{background:radial-gradient(120% 100% at 20% 0%,#7c3aed,#0b0e28 60%,#070a1c);display:flex;align-items:center;justify-content:center}
+.tp-aurora span{width:70%;height:22px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:6px;display:block}
+.theme-card b{font-size:11.5px;font-weight:800}
+.theme-card small{font-size:9.5px;opacity:.5;display:block;margin-top:1px}
+.btn-main{
+  width:100%;padding:13px;font-size:13.5px;font-weight:850;letter-spacing:.01em;
+  margin-top:6px
+}
+.kinds{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px}
+.kind{padding:8px 13px;border-radius:10px;font-size:12px;font-weight:750;transition:.15s}
+.kind:active{transform:scale(.95)}
+[data-theme="candy"] .kind{background:#fff;border:2px solid #231F1C;box-shadow:2px 2px 0 #E7E0D2}
+[data-theme="candy"] .kind.on{background:#FF7A59;color:#fff;box-shadow:2px 2px 0 #231F1C}
+[data-theme="aurora"] .kind{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.8)}
+[data-theme="aurora"] .kind.on{background:linear-gradient(135deg,#a78bfa,#22d3ee);color:#070c1e;border-color:transparent}
+.btn-ghost{
+  width:100%;padding:11px;font-size:12px;font-weight:700;opacity:.6;margin-top:4px
+}
+.toast{
+  position:absolute;left:50%;bottom:110px;transform:translate(-50%,10px);
+  background:rgba(20,18,28,.9);color:#fff;font-size:11.5px;font-weight:600;
+  padding:9px 16px;border-radius:99px;z-index:30;opacity:0;pointer-events:none;
+  transition:.25s;white-space:nowrap
+}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- 顶栏 -->
+  <header class="topbar">
+    <button class="avatar" id="avatarBtn" aria-label="设置"></button>
+    <div class="who">
+      <b id="asstName">小助理</b>
+      <span class="greet" id="greetLine">总裁，晚上好</span>
+    </div>
+    <button class="icon-btn" id="settingsBtn" aria-label="设置">⋯</button>
+  </header>
+
+  <!-- 视图 -->
+  <div class="views">
+    <!-- 首页 -->
+    <section class="view on" id="view-home">
+      <div id="heroSlot"></div>
+      <div class="stats" id="statsRow"></div>
+      <div class="week" id="weekRow"></div>
+      <div class="sec"><span class="sec-title">接下来</span><span class="sec-title" id="upCount"></span></div>
+      <div class="list" id="homeList"></div>
+      <div class="chips">
+        <div class="chip" data-quick="最近有什么要交的？">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.4V6l1.8 1.1"/></svg>
+          最近截止
+        </div>
+        <div class="chip" data-quick="记事本">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2.4" y="2.2" width="7.2" height="8.6" rx="1.6"/><path d="M4.6 2.2V1.4h2.8v.8"/></svg>
+          记事本
+        </div>
+        <div class="chip" data-quick="这周有几件事？">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="1.4" y="2.6" width="9.2" height="8" rx="1.6"/><path d="M1.4 4.8h9.2M4 1.4v2.4M8 1.4v2.4"/></svg>
+          本周安排
+        </div>
+      </div>
+      <div class="hint" style="text-align:center;font-size:10px;margin-top:16px">把截图或文字丢进对话框，我帮你记</div>
+    </section>
+
+    <!-- 对话 -->
+    <section class="view" id="view-chat"></section>
+
+    <!-- 记事本 -->
+    <section class="view" id="view-note"></section>
+  </div>
+
+  <!-- 输入区 -->
+  <div class="composer on" id="composer">
+    <div class="composer-in">
+      <button class="mini-btn" id="pasteBtn" title="截图/图片">
+        <svg width="17" height="17" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="1.4" y="4.2" width="11.2" height="8.2" rx="2.2"/><circle cx="7" cy="8.3" r="2.4"/><path d="M4.9 4.2l.8-1.4h2.6l.8 1.4"/></svg>
+      </button>
+      <textarea id="input" rows="1" placeholder="把作业/竞赛通知丢给我，或者直接问…"></textarea>
+      <button class="send" id="sendBtn" aria-label="发送">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h9.4M7.6 3.2L11.6 7l-4 3.8"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- 底栏 -->
+  <nav class="tabbar" id="tabbar">
+    <button class="tab on" data-view="home">
+      <span class="dot"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M2.2 6.1L7 2l4.8 4.1v5.6a.9.9 0 0 1-.9.9H3.1a.9.9 0 0 1-.9-.9z"/></svg></span>
+      首页
+    </button>
+    <button class="tab" data-view="chat">
+      <span class="dot"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M12 7.2c0 2.5-2.2 4.5-5 4.5-.7 0-1.4-.1-2-.3L2 12.4l.9-2.3A4.3 4.3 0 0 1 2 7.2C2 4.7 4.2 2.7 7 2.7s5 2 5 4.5z"/></svg></span>
+      对话
+    </button>
+    <button class="tab" data-view="note">
+      <span class="dot"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="2.2" y="2.2" width="9.6" height="9.6" rx="2"/><path d="M4.8 5.4h4.4M4.8 7.6h3"/></svg></span>
+      记事本
+    </button>
+  </nav>
+
+  <!-- 遮罩 + 设置面板 -->
+  <div class="mask" id="mask"></div>
+  <div class="sheet" id="sheet">
+    <div class="sheet-handle"></div>
+    <button class="sheet-close" id="sheetClose" aria-label="关闭">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.4 2.4l7.2 7.2M9.6 2.4L2.4 9.6"/></svg>
+    </button>
+    <h3>把助理调成你的样子</h3>
+    <p class="desc">改完点保存，立刻生效。所有记录都存在你自己的设备上。</p>
+
+    <div class="sec-title2">助理的名字</div>
+    <div class="pair"><input class="field" id="fName" maxlength="10" placeholder="小助理"></div>
+
+    <div class="sec-title2">它怎么称呼你</div>
+    <div class="pair"><input class="field" id="fCall" maxlength="10" placeholder="总裁"></div>
+
+    <div class="sec-title2">头像</div>
+    <div class="ava-grid" id="avaGrid"></div>
+
+    <div class="sec-title2">主题</div>
+    <div class="theme-row">
+      <div class="theme-card on" data-theme-pick="candy">
+        <div class="theme-prev tp-candy"><span></span></div>
+        <div><b>元气糖果</b><small>明亮 · 活泼（默认）</small></div>
+      </div>
+      <div class="theme-card" data-theme-pick="aurora">
+        <div class="theme-prev tp-aurora"><span></span></div>
+        <div><b>极光玻璃</b><small>深色 · 夜间</small></div>
+      </div>
+    </div>
+
+    <button class="btn-main" id="saveBtn">保存</button>
+    <button class="btn-ghost" id="clearBtn">清除全部记录</button>
+  </div>
+
+  <!-- 编辑面板 -->
+  <div class="sheet" id="rSheet">
+    <div class="sheet-handle"></div>
+    <button class="sheet-close" id="rClose" aria-label="关闭">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.4 2.4l7.2 7.2M9.6 2.4L2.4 9.6"/></svg>
+    </button>
+    <h3>改这一件事</h3>
+    <p class="desc">时间留空就是「待补」，之后想起来再填。</p>
+
+    <div class="sec-title2">事项</div>
+    <div class="pair"><input class="field" id="rTitle" maxlength="30" placeholder="事项名称"></div>
+
+    <div class="sec-title2">截止时间</div>
+    <div class="pair"><input class="field" id="rDue" type="datetime-local"></div>
+
+    <div class="sec-title2">类型</div>
+    <div class="kinds" id="rKinds"></div>
+
+    <div class="sec-title2">备注</div>
+    <div class="pair"><input class="field" id="rNote" maxlength="40" placeholder="要带什么 / 在哪交"></div>
+
+    <button class="btn-main" id="rSave">保存</button>
+    <button class="btn-ghost" id="rDel">删除这一条</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <input type="file" id="fileInput" accept="image/*" style="display:none">
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ================= 数据层 ================= */
+const KEY = "campus-assistant-v1";
+const DEF = {
+  profile: { name:"小助理", call:"总裁", theme:"candy", avatar:{type:"glyph", glyph:"助", color:0, img:null} },
+  records: [],
+  chats: [],
+  seeded: false
+};
+let db = load();
+
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(!raw) return JSON.parse(JSON.stringify(DEF));
+    const d = JSON.parse(raw);
+    return Object.assign(JSON.parse(JSON.stringify(DEF)), d, {
+      profile: Object.assign({}, DEF.profile, d.profile||{}, {
+        avatar: Object.assign({}, DEF.profile.avatar, (d.profile||{}).avatar||{})
+      })
+    });
+  }catch(e){ return JSON.parse(JSON.stringify(DEF)); }
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){} }
+
+/* ================= 工具 ================= */
+const $ = s => document.querySelector(s);
+const pad = n => String(n).padStart(2,"0");
+const DAY = 86400000;
+const uid = () => Math.random().toString(36).slice(2,9);
+
+function startOfDay(d){ const x = new Date(d); x.setHours(0,0,0,0); return x; }
+function dayDiff(ts){
+  if(!ts) return null;
+  return Math.round((startOfDay(new Date(ts)) - startOfDay(new Date()))/DAY);
+}
+function fmtDue(ts){
+  if(!ts) return "时间待补";
+  const d = new Date(ts);
+  return `${d.getMonth()+1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function dueLabel(ts){
+  if(!ts) return {text:"待补时间", soon:false};
+  const n = dayDiff(ts);
+  if(n < 0)  return {text:`逾期 ${-n} 天`, soon:true};
+  if(n === 0) return {text:"今天", soon:true};
+  if(n === 1) return {text:"明天", soon:true};
+  return {text:`${n} 天`, soon:n <= 3};
+}
+function greetWord(){
+  const h = new Date().getHours();
+  if(h < 5)  return "还没睡呀";
+  if(h < 9)  return "早上好";
+  if(h < 12) return "上午好";
+  if(h < 14) return "中午好";
+  if(h < 18) return "下午好";
+  if(h < 23) return "晚上好";
+  return "夜深了";
+}
+function toast(msg){
+  const t = $("#toast");
+  t.textContent = msg; t.classList.add("on");
+  clearTimeout(t._tm);
+  t._tm = setTimeout(()=>t.classList.remove("on"), 1900);
+}
+function toLocalInput(ts){
+  const d = new Date(ts || Date.now());
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/* ================= 头像 ================= */
+const AVA_COLORS = [
+  ["#FFD23F","#231F1C"], ["#FF7A59","#fff"], ["#4ECDC4","#08302C"],
+  ["#A78BFA","#0B0620"], ["#FFB4C8","#3A1220"], ["#8FD3F4","#0A2A3A"]
+];
+function avatarHTML(){
+  const a = db.profile.avatar;
+  const th = document.documentElement.dataset.theme;
+  if(a.type === "img" && a.img) return `<img src="${a.img}" alt="">`;
+  if(th === "aurora") return `<span>${escapeHTML(a.glyph||"助")}</span>`;
+  const c = AVA_COLORS[a.color % AVA_COLORS.length];
+  return `<span style="color:${c[1]}">${escapeHTML(a.glyph||"助")}</span>`;
+}
+function applyAvatar(){
+  const el = $("#avatarBtn");
+  const a = db.profile.avatar;
+  const th = document.documentElement.dataset.theme;
+  el.innerHTML = avatarHTML();
+  if(a.type === "img" && a.img) el.style.background = "transparent";
+  else if(th === "aurora") el.style.background = "";
+  else el.style.background = AVA_COLORS[a.color % AVA_COLORS.length][0];
+}
+function escapeHTML(s){
+  return String(s).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+}
+
+/* ================= 自然语言解析 ================= */
+const KIND_MAP = [
+  {k:"竞赛", re:/(竞赛|比赛|大赛|杯|赛|建模|挑战赛|初赛|复赛|决赛)/},
+  {k:"考试", re:/(考试|期末|期中|四级|六级|考研|测验|补考|机考)/},
+  {k:"作业", re:/(作业|报告|论文|实验|课设|大作业|习题|pre|展示)/i},
+  {k:"活动", re:/(讲座|活动|会议|例会|班会|宣讲|报名)/}
+];
+const WEEK = {"一":1,"二":2,"三":3,"四":4,"五":5,"六":6,"日":0,"天":0};
+const CN_NUM = {"零":0,"一":1,"二":2,"两":2,"三":3,"四":4,"五":5,"六":6,"七":7,"八":8,"九":9};
+function cnHour(str){
+  if(/^\d+$/.test(str)) return parseInt(str,10);
+  if(str === "十") return 10;
+  if(str.length === 2 && str[1] === "十") return (CN_NUM[str[0]]||0) * 10;
+  if(str[0] === "十") return 10 + (CN_NUM[str[1]]||0);
+  if(str.length === 3 && str[1] === "十") return (CN_NUM[str[0]]||0) * 10 + (CN_NUM[str[2]]||0);
+  return CN_NUM[str] !== undefined ? CN_NUM[str] : null;
+}
+
+function parseText(raw){
+  const now = new Date();
+  let s = " " + raw + " ";
+  let base = null, hour = 23, min = 59, hasTime = false, hasDate = false;
+  const cut = [];
+
+  // ---- 时间 ----
+  const tRe = /(上午|早上|早晨|中午|下午|晚上|傍晚|凌晨)?\s*(\d{1,2}|[零一二两三四五六七八九十]{1,3})\s*(?:[:：点时])\s*(\d{1,2})?\s*分?/;
+  const tm = s.match(tRe);
+  if(tm){
+    let h = cnHour(tm[2]);
+    const mi = tm[3] ? parseInt(tm[3],10) : 0;
+    const p = tm[1] || "";
+    if(h !== null){
+      if((p==="下午"||p==="晚上"||p==="傍晚") && h < 12) h += 12;
+      if(p==="中午" && h < 11) h += 12;
+      if(p==="凌晨" && h === 12) h = 0;
+      if(h >= 0 && h <= 23 && mi >= 0 && mi <= 59){
+        hour = h; min = mi; hasTime = true;
+        cut.push(tm[0]);
+      }
+    }
+  }
+
+  // ---- 日期 ----
+  const ymd = s.match(/(\d{4})\s*[-\/年]\s*(\d{1,2})\s*[-\/月]\s*(\d{1,2})\s*[日号]?/);
+  if(ymd){
+    base = new Date(+ymd[1], +ymd[2]-1, +ymd[3]); hasDate = true; cut.push(ymd[0]);
+  }
+  if(!base){
+    const md = s.match(/(\d{1,2})\s*月\s*(\d{1,2})\s*[日号]?/);
+    if(md){
+      let y = now.getFullYear();
+      let d = new Date(y, +md[1]-1, +md[2]);
+      if(startOfDay(d) < startOfDay(now)) d = new Date(y+1, +md[1]-1, +md[2]);
+      base = d; hasDate = true; cut.push(md[0]);
+    }
+  }
+  if(!base){
+    const sl = s.match(/(\d{1,2})\s*[\/]\s*(\d{1,2})\s*[日号]?/);
+    if(sl && +sl[1] <= 12 && +sl[2] <= 31){
+      let y = now.getFullYear();
+      let d = new Date(y, +sl[1]-1, +sl[2]);
+      if(startOfDay(d) < startOfDay(now)) d = new Date(y+1, +sl[1]-1, +sl[2]);
+      base = d; hasDate = true; cut.push(sl[0]);
+    }
+  }
+  if(!base){
+    const rel = [[/大后天/,3],[/后天/,2],[/明天|明日/,1],[/今天|今日|今晚/,0]];
+    for(const [re,n] of rel){
+      if(re.test(s)){
+        const d = new Date(now); d.setHours(0,0,0,0); d.setDate(d.getDate()+n);
+        base = d; hasDate = true; cut.push(s.match(re)[0]); break;
+      }
+    }
+  }
+  if(!base){
+    const nd = s.match(/(\d{1,2})\s*天\s*[后内]/);
+    if(nd){
+      const d = new Date(now); d.setHours(0,0,0,0); d.setDate(d.getDate()+ +nd[1]);
+      base = d; hasDate = true; cut.push(nd[0]);
+    }
+  }
+  if(!base){
+    const wkOnly = s.match(/(下下|下|本|这)\s*周(?!\s*[一二三四五六日天])/);
+    if(wkOnly){
+      const d = startOfDay(new Date());
+      const delta = (7 - d.getDay()) % 7;
+      d.setDate(d.getDate() + delta + (wkOnly[1] === "下" ? 7 : wkOnly[1] === "下下" ? 14 : 0));
+      base = d; hasDate = true; cut.push(wkOnly[0]);
+    }
+  }
+  if(!base){
+    const wk = s.match(/(下下|下|本|这)?\s*(?:周|星期)\s*([一二三四五六日天])/);
+    if(wk){
+      const target = WEEK[wk[2]];
+      const d = startOfDay(new Date());
+      const cur = d.getDay();
+      let diff = (target - cur + 7) % 7;
+      if(wk[1] === "下")      diff = diff === 0 ? 7 : diff + 7;
+      else if(wk[1] === "下下") diff = (diff === 0 ? 7 : diff) + 14;
+      else if(diff === 0)      diff = 7;
+      d.setDate(d.getDate() + diff);
+      base = d; hasDate = true; cut.push(wk[0]);
+    }
+  }
+
+  // ---- 标题 ----
+  let title = s;
+  cut.forEach(c => { title = title.split(c).join(" "); });
+  title = title
+    .replace(/^\s*(帮我|帮忙|麻烦|请|记得|提醒我|提示我|记录一下|记一下|记录|备忘|新任务|记下|我有个|有一个)+/g," ")
+    .replace(/(截止时间|截止日期|截止|ddl|DDL|要交|提交时间|之前|以前|前)/g," ")
+    .replace(/[，,。;；!！?？~、\s]+/g," ")
+    .trim();
+
+  // 类别
+  let kind = "其他";
+  for(const k of KIND_MAP){ if(k.re.test(title + raw)){ kind = k.k; break; } }
+
+  let due = null;
+  if(hasDate){
+    const d = base ? new Date(base) : new Date(now);
+    d.setHours(hour, min, 0, 0);
+    due = d.getTime();
+  }
+  return { title: title || "未命名事项", due, kind, hasTime, hasDate };
+}
+
+/* ================= 记录 ================= */
+const ICONS = { "作业":"作", "竞赛":"赛", "考试":"考", "活动":"活", "其他":"记" };
+function addRecord(p){
+  const r = { id:uid(), title:p.title, due:p.due, kind:p.kind || "其他", note:p.note||"", done:false, createdAt:Date.now() };
+  db.records.push(r); save();
+  return r;
+}
+function upcoming(){
+  return db.records.filter(r => !r.done)
+    .sort((a,b) => (a.due||9e15) - (b.due||9e15));
+}
+function nearest(){
+  const u = upcoming().filter(r => r.due && r.due > Date.now() - DAY);
+  return u[0] || upcoming()[0] || null;
+}
+
+/* ================= 渲染 ================= */
+function renderHeader(){
+  const p = db.profile;
+  $("#asstName").textContent = p.name || "小助理";
+  $("#greetLine").textContent = `${p.call || "总裁"}，${greetWord()}`;
+  applyAvatar();
+}
+
+function renderHome(){
+  const slot = $("#heroSlot");
+  const n = nearest();
+  if(!n){
+    slot.innerHTML = `<div class="hero-empty card" style="display:block">
+      还没有要记的事。<br>把通知截图发我，或者直接说「11月15日 23:59 数学建模报名」。
+    </div>`;
+  }else{
+    const dl = dueLabel(n.due);
+    let pct = 30;
+    if(n.due){
+      const span = Math.max(1, n.due - (n.createdAt||Date.now()));
+      pct = Math.min(100, Math.max(4, Math.round((1 - (n.due - Date.now())/span) * 100)));
+    }
+    slot.innerHTML = `<div class="card">
+      <div class="card-top">
+        <span class="eyebrow">最近截止</span>
+        <span class="pill ${dl.soon?'':'warn'}">${dl.text}</span>
+      </div>
+      <h2>${escapeHTML(n.title)}</h2>
+      <div class="sub">${fmtDue(n.due)}${n.kind ? " · " + n.kind : ""}</div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+    </div>`;
+  }
+
+  const list = upcoming().filter(r => !n || r.id !== n.id).slice(0, 6);
+  $("#upCount").textContent = upcoming().length > 1 ? `还有 ${upcoming().length - 1} 项` : "";
+  $("#homeList").innerHTML = list.length
+    ? list.map(itemHTML).join("")
+    : `<div class="empty">${n ? "就这一件，做完就清空了。" : "清单是空的，总裁可以歇会儿了。"}</div>`;
+
+  // 概览
+  const u = upcoming();
+  const weekN = u.filter(r => r.due && dayDiff(r.due) >= 0 && dayDiff(r.due) <= 7).length;
+  const tight = n ? dueLabel(n.due).text : "—";
+  $("#statsRow").innerHTML = `
+    <div class="stat"><b>${u.length}</b><span>待办</span></div>
+    <div class="stat"><b>${weekN}</b><span>本周</span></div>
+    <div class="stat"><b>${tight}</b><span>最紧一件</span></div>`;
+
+  // 本周节奏
+  const wl = ["日","一","二","三","四","五","六"];
+  let wh = "";
+  for(let i=0;i<7;i++){
+    const d = startOfDay(new Date()); d.setDate(d.getDate()+i);
+    const end = d.getTime() + DAY;
+    const cnt = db.records.filter(r => !r.done && r.due && r.due >= d.getTime() && r.due < end).length;
+    wh += `<div class="day ${i===0?'today':''} ${cnt?'has':''}">
+      <i>${i===0?"今":wl[d.getDay()]}</i><b>${d.getDate()}</b><span class="pt"></span>
+    </div>`;
+  }
+  $("#weekRow").innerHTML = wh;
+}
+
+function itemHTML(r){
+  const dl = dueLabel(r.due);
+  return `<div class="item" data-open="${r.id}">
+    <div class="item-ic">${ICONS[r.kind]||"记"}</div>
+    <div class="item-t">
+      <b>${escapeHTML(r.title)}</b>
+      <span>${fmtDue(r.due)}${r.note ? " · " + escapeHTML(r.note).slice(0,14) : ""}</span>
+    </div>
+    <span class="item-d ${dl.soon?'soon':''}">${dl.text}</span>
+  </div>`;
+}
+
+function renderNote(){
+  const all = db.records.slice();
+  const groups = [
+    { key:"over", name:"已逾期", items:[] },
+    { key:"today", name:"今天", items:[] },
+    { key:"week", name:"7 天内", items:[] },
+    { key:"later", name:"以后", items:[] },
+    { key:"undated", name:"时间待补", items:[] },
+    { key:"done", name:"已完成", items:[] }
+  ];
+  all.forEach(r => {
+    if(r.done) return groups[5].items.push(r);
+    if(!r.due) return groups[4].items.push(r);
+    const n = dayDiff(r.due);
+    if(n < 0) groups[0].items.push(r);
+    else if(n === 0) groups[1].items.push(r);
+    else if(n <= 7) groups[2].items.push(r);
+    else groups[3].items.push(r);
+  });
+  groups.forEach(g => {
+    if(g.key !== "done") g.items.sort((a,b)=>(a.due||9e15)-(b.due||9e15));
+    else g.items.sort((a,b)=>(b.doneAt||0)-(a.doneAt||0));
+  });
+
+  const total = db.records.filter(r=>!r.done).length;
+  let html = `<div class="sec" style="margin-top:4px">
+      <span class="sec-title">记事本</span>
+      <span class="sec-title">${total} 项待办</span>
+    </div>`;
+
+  const shown = groups.filter(g => g.items.length);
+  if(!shown.length){
+    html += `<div class="empty">记事本还是空的。<br>去首页把通知丢给小助理吧。</div>`;
+  }
+  shown.forEach(g => {
+    html += `<div class="note-group">
+      <div class="note-head">${g.name}<em>${g.items.length}</em></div>
+      ${g.items.map(r => `
+        <div class="note-item ${r.done?'done':''}" data-open="${r.id}">
+          <div class="check" data-toggle="${r.id}"></div>
+          <div class="note-t">
+            <b>${escapeHTML(r.title)}</b>
+            <p>${r.due ? fmtDue(r.due) : "还没定时间"}${r.note ? " · " + escapeHTML(r.note) : ""}</p>
+          </div>
+          <div class="note-r">
+            <span class="note-d">${r.done ? "已完成" : dueLabel(r.due).text}</span>
+            <span class="tag">${r.kind||"其他"}</span>
+          </div>
+        </div>`).join("")}
+    </div>`;
+  });
+  if(shown.length) html += `<div class="note-foot">点条目可改时间 / 删除 · 点圆圈直接划掉</div>`;
+  $("#view-note").innerHTML = html;
+}
+
+function renderChat(){
+  const box = $("#view-chat");
+  box.innerHTML = db.chats.map(m => {
+    if(m.role === "a"){
+      return `<div class="msg a">
+        <div class="mini" style="${miniStyle()}">${avatarHTML()}</div>
+        <div class="bubble bubble-a">${escapeHTML(m.text)}</div>
+      </div>`;
+    }
+    return `<div class="msg u"><div class="bubble bubble-u">${escapeHTML(m.text)}</div></div>`;
+  }).join("");
+  box.scrollTop = box.scrollHeight;
+}
+function miniStyle(){
+  const a = db.profile.avatar;
+  if(a.type === "img" && a.img) return "";
+  if(document.documentElement.dataset.theme === "aurora") return "";
+  const c = AVA_COLORS[a.color % AVA_COLORS.length];
+  return `background:${c[0]};color:${c[1]}`;
+}
+
+function renderAll(){
+  document.documentElement.dataset.theme = db.profile.theme;
+  renderHeader(); renderHome(); renderNote(); renderChat();
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if(meta) meta.content = db.profile.theme === "candy" ? "#FFF4E2" : "#070a1c";
+}
+
+/* ================= 对话逻辑 ================= */
+function say(text){
+  db.chats.push({ role:"a", text, t:Date.now() });
+  if(db.chats.length > 120) db.chats = db.chats.slice(-120);
+  save(); renderChat();
+}
+function hear(text){
+  db.chats.push({ role:"u", text, t:Date.now() });
+  save(); renderChat();
+}
+
+function reply(text){
+  const t = text.trim();
+  const call = db.profile.call || "总裁";
+
+  // 设置类
+  if(/^(改名|名字)/.test(t)){ return `总裁想把我叫什么？点右上角「⋯」进去改，改完我就是新名字了。`; }
+
+  // 完成
+  const doneM = t.match(/^(?:我)?(?:已经)?(?:做完了?|完成了?|交了|搞定了?)\s*(.*)$/);
+  if(doneM){
+    const kw = doneM[1].trim();
+    const hit = db.records.filter(r => !r.done && (!kw || r.title.includes(kw)));
+    if(hit.length === 1){
+      hit[0].done = true; hit[0].doneAt = Date.now(); save(); renderHome(); renderNote();
+      return `好，${call}。「${hit[0].title}」已经划掉了。还剩 ${db.records.filter(r=>!r.done).length} 项。`;
+    }
+    if(hit.length > 1){
+      return `有 ${hit.length} 项对得上：${hit.map(r=>`「${r.title}」`).join("、")}。要划掉哪一个？`;
+    }
+  }
+
+  // 查询
+  const askNear = /(最近|接下来|有什么|哪些|截止|要交|ddl|deadline|催|还有)/i.test(t);
+  const askWeek = /(这周|本周|一周|七天)/.test(t);
+  const askNote = /(记事本|清单|全部|所有|列表)/.test(t);
+
+  if(askNote && !askNear){
+    const u = upcoming();
+    if(!u.length) return `记事本现在是空的，${call}。`;
+    return `记事本里有 ${u.length} 项待办：\n` + u.slice(0,6).map((r,i)=>{
+      const d = dueLabel(r.due);
+      return `${i+1}. ${r.title} — ${fmtDue(r.due)}（${d.text}）`;
+    }).join("\n") + (u.length>6 ? `\n…还有 ${u.length-6} 项，去记事本看。` : "");
+  }
+
+  if(askNear){
+    let pool = upcoming();
+    if(askWeek){
+      pool = pool.filter(r => r.due && dayDiff(r.due) <= 7);
+      if(!pool.length) return `这周没有要交的东西，${call}可以松口气。`;
+      return `${call}，这周有 ${pool.length} 件事：\n` + pool.map((r,i)=>{
+        return `${i+1}. ${r.title} — ${fmtDue(r.due)}（${dueLabel(r.due).text}）`;
+      }).join("\n");
+    }
+    if(!pool.length) return `目前没有待办，${call}。有新通知丢给我就行。`;
+    const top = pool[0], d = dueLabel(top.due);
+    const rest = pool.slice(1,4);
+    let out = `${call}，最近的是「${top.title}」，${fmtDue(top.due)} 截止（${d.text}）。`;
+    if(rest.length) out += `\n后面还有：\n` + rest.map(r=>`· ${r.title} — ${dueLabel(r.due).text}`).join("\n");
+    return out;
+  }
+
+  // 录入
+  const p = parseText(t);
+  if(p.title.length < 2 && !p.hasDate){
+    return `我在听，${call}。你可以说「11月15日 23:59 数学建模国赛报名」这种，也可以把通知截图发我。`;
+  }
+  const r = addRecord(p);
+  renderHome(); renderNote();
+
+  if(!r.due){
+    return `记下了「${r.title}」，但没听出截止时间。补一个给我？比如「${r.title} 11月20日 18点」。`;
+  }
+  const dl = dueLabel(r.due);
+  const phrase = dl.text === "今天" ? "就是今天"
+    : dl.text === "明天" ? "明天就截止"
+    : dl.text.indexOf("逾期") === 0 ? dl.text
+    : `还有 ${dl.text}`;
+  const warn = dl.soon ? "  时间有点紧，要不要现在就排个计划？" : "";
+  return `记好了，${call}。\n「${r.title}」— ${fmtDue(r.due)}，${phrase}${r.kind !== "其他" ? " · " + r.kind : ""}。${warn}`;
+}
+
+function send(text){
+  const t = (text||"").trim();
+  if(!t) return;
+  hear(t);
+  $("#input").value = "";
+  autoGrow();
+  const box = $("#view-chat");
+  const tp = document.createElement("div");
+  tp.className = "msg a";
+  tp.innerHTML = `<div class="mini" style="${miniStyle()}">${avatarHTML()}</div><div class="bubble bubble-a typing"><i></i><i></i><i></i></div>`;
+  box.appendChild(tp);
+  box.scrollTop = box.scrollHeight;
+  setTimeout(()=>{
+    tp.remove();
+    say(reply(t));
+  }, 420);
+}
+
+/* ================= 视图切换 ================= */
+let curView = "home";
+function go(v){
+  curView = v;
+  document.querySelectorAll(".view").forEach(el=>el.classList.toggle("on", el.id === "view-" + v));
+  document.querySelectorAll(".tab").forEach(el=>el.classList.toggle("on", el.dataset.view === v));
+  $("#composer").classList.toggle("on", v !== "note");
+  if(v === "chat") setTimeout(()=>{ const b=$("#view-chat"); b.scrollTop=b.scrollHeight; },60);
+}
+
+/* ================= 设置面板 ================= */
+let draft = null;
+function openSheet(){
+  draft = JSON.parse(JSON.stringify(db.profile));
+  $("#fName").value = draft.name;
+  $("#fCall").value = draft.call;
+  paintAvatars();
+  document.querySelectorAll("[data-theme-pick]").forEach(el=>{
+    el.classList.toggle("on", el.dataset.themePick === draft.theme);
+  });
+  $("#mask").classList.add("on");
+  $("#sheet").classList.add("on");
+}
+function closeSheet(){
+  $("#mask").classList.remove("on");
+  $("#sheet").classList.remove("on");
+  const rs = $("#rSheet");
+  if(rs) rs.classList.remove("on");
+  editId = null;
+  if(draft){ draft = null; document.documentElement.dataset.theme = db.profile.theme; }
+}
+const GLYPHS = ["助","柚","星","喵","豆","光"];
+function paintAvatars(){
+  const g = $("#avaGrid");
+  const au = draft.theme === "aurora";
+  let html = GLYPHS.map((gl,i)=>{
+    const c = AVA_COLORS[i % AVA_COLORS.length];
+    const bg = au ? "linear-gradient(140deg,#a78bfa,#22d3ee)" : c[0];
+    const fg = au ? "#070d20" : c[1];
+    const on = draft.avatar.type === "glyph" && draft.avatar.glyph === gl ? " on" : "";
+    return `<button class="ava-opt${on}" data-glyph="${gl}" style="background:${bg};color:${fg}">${gl}</button>`;
+  }).join("");
+  const upOn = draft.avatar.type === "img" ? " on" : "";
+  html += `<button class="ava-opt${upOn}" id="upBtn" style="background:rgba(140,140,150,.16);color:currentColor;font-size:16px">＋</button>`;
+  g.innerHTML = html;
+
+  g.querySelectorAll("[data-glyph]").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      const gl = b.dataset.glyph;
+      draft.avatar = { type:"glyph", glyph:gl, color:GLYPHS.indexOf(gl), img:null };
+      paintAvatars();
+    });
+  });
+  const up = $("#upBtn");
+  if(up) up.addEventListener("click", ()=> $("#fileInput").click());
+  previewAvatar();
+}
+function previewAvatar(){
+  const el = $("#avatarBtn");
+  const av = draft.avatar;
+  if(av.type === "img" && av.img){
+    el.innerHTML = `<img src="${av.img}" alt="">`;
+    el.style.background = "transparent";
+    return;
+  }
+  if(draft.theme === "aurora"){
+    el.innerHTML = `<span>${escapeHTML(av.glyph||"助")}</span>`;
+    el.style.background = "";
+    return;
+  }
+  const c = AVA_COLORS[(av.color||0) % AVA_COLORS.length];
+  el.innerHTML = `<span style="color:${c[1]}">${escapeHTML(av.glyph||"助")}</span>`;
+  el.style.background = c[0];
+}
+
+/* ================= 记录编辑 ================= */
+let editId = null, editKind = "其他";
+const KINDS = ["作业","竞赛","考试","活动","其他"];
+
+function openRecord(id){
+  const r = db.records.find(x => x.id === id);
+  if(!r) return;
+  editId = id; editKind = r.kind || "其他";
+  $("#rTitle").value = r.title;
+  $("#rDue").value = r.due ? toLocalInput(r.due) : "";
+  $("#rNote").value = r.note || "";
+  paintKinds();
+  $("#mask").classList.add("on");
+  $("#rSheet").classList.add("on");
+}
+function paintKinds(){
+  $("#rKinds").innerHTML = KINDS.map(k =>
+    `<button class="kind ${k === editKind ? "on" : ""}" data-k="${k}">${k}</button>`).join("");
+}
+$("#rKinds").addEventListener("click", e=>{
+  const b = e.target.closest("[data-k]");
+  if(!b) return;
+  editKind = b.dataset.k;
+  paintKinds();
+});
+$("#rClose").addEventListener("click", closeSheet);
+$("#rSave").addEventListener("click", ()=>{
+  const r = db.records.find(x => x.id === editId);
+  if(!r){ closeSheet(); return; }
+  r.title = ($("#rTitle").value || "").trim() || r.title;
+  const v = $("#rDue").value;
+  r.due = v ? new Date(v).getTime() : null;
+  r.kind = editKind;
+  r.note = ($("#rNote").value || "").trim();
+  save(); closeSheet(); renderHome(); renderNote();
+  toast("已更新");
+});
+$("#rDel").addEventListener("click", ()=>{
+  if(!confirm("删除这一条？删了就找不回来了。")) return;
+  db.records = db.records.filter(x => x.id !== editId);
+  save(); closeSheet(); renderHome(); renderNote();
+  toast("已删除");
+});
+
+/* ================= 事件 ================= */
+let curTab = "home";
+document.querySelectorAll(".tab").forEach(t=>{
+  t.addEventListener("click", ()=> go(t.dataset.view));
+});
+
+$("#settingsBtn").addEventListener("click", openSheet);
+$("#avatarBtn").addEventListener("click", openSheet);
+$("#mask").addEventListener("click", closeSheet);
+$("#sheetClose").addEventListener("click", closeSheet);
+
+$("#fName").addEventListener("input", e=>{ draft.name = e.target.value; });
+$("#fCall").addEventListener("input", e=>{ draft.call = e.target.value; });
+
+document.querySelectorAll("[data-theme-pick]").forEach(el=>{
+  el.addEventListener("click", ()=>{
+    draft.theme = el.dataset.themePick;
+    document.documentElement.dataset.theme = draft.theme;
+    document.querySelectorAll("[data-theme-pick]").forEach(x=>x.classList.toggle("on", x === el));
+    paintAvatars();
+  });
+});
+
+$("#saveBtn").addEventListener("click", ()=>{
+  db.profile.name = (draft.name||"").trim() || "小助理";
+  db.profile.call = (draft.call||"").trim() || "总裁";
+  db.profile.theme = draft.theme;
+  db.profile.avatar = draft.avatar;
+  save(); closeSheet(); renderAll();
+  toast("设置已保存");
+});
+$("#clearBtn").addEventListener("click", ()=>{
+  if(!confirm("确定清除全部记录？这个操作不可恢复。")) return;
+  db.records = []; db.chats = []; save(); closeSheet(); renderAll();
+  toast("已清空");
+});
+
+$("#fileInput").addEventListener("change", e=>{
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+  const rd = new FileReader();
+  rd.onload = ev => {
+    draft.avatar = { type:"img", glyph:"助", color:0, img:ev.target.result };
+    paintAvatars();
+  };
+  rd.readAsDataURL(f);
+  e.target.value = "";
+});
+
+$("#sendBtn").addEventListener("click", ()=> send($("#input").value));
+const inputEl = $("#input");
+inputEl.addEventListener("keydown", e=>{
+  if(e.key === "Enter" && !e.shiftKey){ e.preventDefault(); send(inputEl.value); }
+});
+inputEl.addEventListener("input", autoGrow);
+function autoGrow(){
+  inputEl.style.height = "auto";
+  inputEl.style.height = Math.min(84, inputEl.scrollHeight) + "px";
+}
+inputEl.addEventListener("focus", ()=>{ if(curView === "home") go("chat"); });
+
+$("#pasteBtn").addEventListener("click", ()=>{
+  toast("把截图拖进来，或直接粘贴文字");
+  if(curView === "home") go("chat");
+  inputEl.focus();
+});
+
+document.querySelectorAll("[data-quick]").forEach(c=>{
+  c.addEventListener("click", ()=>{ send(c.dataset.quick); });
+});
+
+// 列表点击 -> 编辑（事件委托）
+document.addEventListener("click", e=>{
+  const t = e.target.closest("[data-toggle]");
+  if(t){
+    e.stopPropagation();
+    const r = db.records.find(x => x.id === t.dataset.toggle);
+    if(r){ r.done = !r.done; r.doneAt = r.done ? Date.now() : 0; save(); renderHome(); renderNote(); }
+    return;
+  }
+  const o = e.target.closest("[data-open]");
+  if(o && !document.querySelector(".sheet.on")){
+    // 首页卡片点击也允许进入记事本查看
+    openRecord(o.dataset.open);
+  }
+});
+
+// 粘贴图片
+document.addEventListener("paste", e=>{
+  const items = e.clipboardData && e.clipboardData.items;
+  if(!items) return;
+  for(const it of items){
+    if(it.type && it.type.indexOf("image") === 0){
+      const f = it.getAsFile();
+      if(!f) continue;
+      const rd = new FileReader();
+      rd.onload = ev => {
+        go("chat");
+        hear("[截图] 收到一张通知截图");
+        setTimeout(()=>{
+          say("截图我收到了，总裁。不过原型里的我还没接上图像识别——把截图里的关键信息（标题 + 截止时间）打给我，我立刻记进记事本。");
+        }, 380);
+      };
+      rd.readAsDataURL(f);
+      e.preventDefault();
+      return;
+    }
+  }
+});
+
+/* ================= 启动 ================= */
+function seed(){
+  if(db.seeded || db.records.length) return;
+  const now = new Date();
+  const mk = (d,h,m)=>{ const x = new Date(now); x.setHours(h,m,0,0); x.setDate(x.getDate()+d); return x.getTime(); };
+  db.records = [
+    { id:uid(), title:"数学建模国赛 · 报名", due:mk(3,23,59), kind:"竞赛", note:"三人一队，找队友", done:false, createdAt:Date.now()-DAY*2 },
+    { id:uid(), title:"数据结构实验报告", due:mk(1,20,0), kind:"作业", note:"第 5 章，附源码", done:false, createdAt:Date.now()-DAY*3 },
+    { id:uid(), title:"四级准考证打印", due:mk(8,12,0), kind:"考试", note:"", done:false, createdAt:Date.now()-DAY },
+    { id:uid(), title:"社团招新材料", due:mk(6,22,0), kind:"活动", note:"交到活动中心 302", done:false, createdAt:Date.now()-DAY }
+  ];
+  db.seeded = true;
+  db.chats = [{ role:"a", text:`我是${db.profile.name}。作业、竞赛、考试，凡是带截止时间的，截图或文字丢给我就行。\n需要的时候问我一句「最近有什么要交的」，我会把最急的挑出来。`, t:Date.now() }];
+  save();
+}
+seed();
+renderAll();
+autoGrow();
+
+// 演示用参数：#theme=aurora&view=chat（不写入本地设置）
+try{
+  const q = new URLSearchParams(location.hash.replace(/^#/,""));
+  const th = q.get("theme");
+  if(th === "candy" || th === "aurora"){ db.profile.theme = th; renderAll(); }
+  const vw = q.get("view");
+  if(vw === "chat" || vw === "note" || vw === "home") go(vw);
+  if(q.get("sheet") === "1") openSheet();
+  if(q.get("edit") === "1" && db.records[0]) openRecord(db.records[0].id);
+}catch(e){}
+
+})();
+</script>
+</body>
+</html>

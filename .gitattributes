@@ -1,0 +1,12 @@
+# 统一换行符，避免 Windows / macOS 协作时整文件 diff
+* text=auto
+
+*.html text
+*.md   text
+*.css  text
+*.js   text
+*.json text
+
+*.png  binary
+*.jpg  binary
+*.ico  binary

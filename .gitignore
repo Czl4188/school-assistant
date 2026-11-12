@@ -1,0 +1,16 @@
+# 忽略本地工具与系统文件
+.workbuddy/
+.*.genie
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+
+# 依赖与构建产物（当前项目零依赖，预留）
+node_modules/
+dist/
+.cache/
