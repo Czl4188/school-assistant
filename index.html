@@ -466,6 +466,7 @@ html[data-theme="aurora"] .app::after{content:none}
 .btn-ghost{
   width:100%;padding:11px;font-size:12px;font-weight:700;opacity:.6;margin-top:4px
 }
+.ver{text-align:center;font-size:9.5px;opacity:.3;margin-top:12px;letter-spacing:.04em}
 .toast{
   position:absolute;left:50%;bottom:110px;transform:translate(-50%,10px);
   background:rgba(20,18,28,.9);color:#fff;font-size:11.5px;font-weight:600;
@@ -897,6 +898,7 @@ html[data-theme="aurora"] .app::after{content:none}
 
     <button class="btn-main" id="saveBtn">保存</button>
     <button class="btn-ghost" id="clearBtn">清除全部记录</button>
+    <div class="ver" id="verLine">v0.4</div>
   </div>
 
   <!-- 编辑面板 -->
@@ -1607,7 +1609,7 @@ function replyLocal(text){
   }
 
   // 查询
-  const askNear = /(最近|接下来|有什么|哪些|截止|要交|ddl|deadline|催|还有)/i.test(t);
+  const askNear = /(最近|接下来|有什么|哪些|有没有|几件|几项|还剩|还要|还有哪些|ddl|deadline)/i.test(t);
   const askWeek = /(这周|本周|一周|七天)/.test(t);
   const askNote = /(记事本|清单|全部|所有|列表)/.test(t);
 
@@ -1644,6 +1646,10 @@ function replyLocal(text){
   if(isDateTimeQuestion(t)) return dateTimeAnswer();
   if(looksLikeQuestion(t) && !p.due){
     return `我在的，${call}。想记事情就带上时间，比如「11月15日 23:59 建模报名」；想问什么也直接说。`;
+  }
+  // 既不像正经事、也没有明确时间点（"我是你老公""今天好累啊"），绝不写进记事本
+  if(!looksLikeTask(t) && !hasExplicitTime(t)){
+    return `在的，${call}。\n想记事情就带上时间，比如「11月15日 23:59 建模报名」；想聊两句也随时说。`;
   }
   if(p.title.length < 2 && !p.hasDate){
     return `我在听，${call}。你可以说「11月15日 23:59 数学建模国赛报名」这种，也可以把通知截图发我。`;
@@ -1867,6 +1873,12 @@ function looksLikeQuestion(t){
   // 短句里出现疑问词，也按提问处理（"今天星期几""现在有什么"）
   if(t.length <= 12 && /(什么|谁|怎么|为什么|多少|哪|多久|几)/.test(t)) return true;
   return false;
+}
+
+/* 像不像一件正经事：作业、考试、报名这类名词，或明确说了"帮我记" */
+function looksLikeTask(t){
+  if(/(记一下|记下|提醒我|帮我记|记个|备忘|别忘)/.test(t)) return true;
+  return /(作业|报告|论文|实验|课设|大作业|习题|考试|补考|期末|期中|四级|六级|考研|竞赛|比赛|大赛|建模|挑战杯|报名|提交|截止|ddl|deadline|答辩|复习|预习|材料|签到|例会|班会|讲座|活动|缴费|注册|面试|实习|打卡|刷题|开会|值日|排练|体检|缴费)/i.test(t);
 }
 
 function hasExplicitTime(t){
@@ -2392,6 +2404,13 @@ function seed(){
   db.chats = [{ role:"a", text:`我是${db.profile.name}。作业、竞赛、考试，凡是带截止时间的，截图或文字丢给我就行。\n需要的时候问我一句「最近有什么要交的」，我会把最急的挑出来。`, t:Date.now() }];
   save();
 }
+/* 版本戳：判断浏览器加载的是不是最新版 */
+const APP_VER = "v0.4.1 · 2026-11-13";
+(function(){
+  const el = $("#verLine");
+  if(el) el.textContent = APP_VER + " · 对话 " + QWEN_TEXT.primary;
+})();
+
 seed();
 renderAll();
 autoGrow();
