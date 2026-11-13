@@ -356,6 +356,68 @@ html[data-theme="aurora"] .app::after{content:none}
 .tag{font-size:9px;font-weight:800;padding:2px 6px;border-radius:5px;border:1.5px solid currentColor;opacity:.6}
 .empty{text-align:center;font-size:12px;padding:40px 20px;line-height:1.8}
 
+/* ================= 今日课程 ================= */
+.cls{margin:2px 0 18px;padding:14px 14px 12px;border-radius:18px}
+.cls-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.cls-eyebrow{display:block;font-size:9px;font-weight:850;letter-spacing:.16em;text-transform:uppercase;opacity:.5}
+.cls-head b{display:block;margin-top:3px;font-size:14.5px;font-weight:850;letter-spacing:-.015em;line-height:1.2}
+.cls-n{font-size:10px;font-weight:850;padding:3px 9px;border-radius:99px;white-space:nowrap;flex:none}
+.cls-list{display:flex;flex-direction:column;gap:6px;margin-top:11px}
+.cls-it{display:flex;align-items:stretch;gap:9px;padding:8px 10px;border-radius:12px}
+.cls-t{flex:none;width:38px;display:flex;flex-direction:column;justify-content:center}
+.cls-t b{font-size:11.5px;font-weight:850;letter-spacing:-.02em;line-height:1.15}
+.cls-t span{font-size:8.5px;opacity:.5;line-height:1.3;margin-top:1px}
+.cls-v{width:3px;border-radius:99px;flex:none;opacity:.85}
+.cls-m{min-width:0;flex:1;display:flex;flex-direction:column;justify-content:center;gap:2px}
+.cls-m b{font-size:12.5px;font-weight:750;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cls-m span{font-size:10px;opacity:.55;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cls-empty{font-size:11px;opacity:.45;line-height:1.75;padding:8px 2px 0}
+.cls-foot{display:flex;justify-content:flex-end;margin-top:11px}
+.cls-all{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:800;padding:6px 11px;border-radius:9px;transition:transform .12s}
+.cls-all:active{transform:scale(.95)}
+[data-theme="candy"] .cls{background:#fff;border:2.5px solid #231F1C;box-shadow:5px 5px 0 #4ECDC4}
+[data-theme="candy"] .cls-it{background:#F3FBF9}
+[data-theme="candy"] .cls-v{background:#4ECDC4}
+[data-theme="candy"] .cls-n{background:#4ECDC4;color:#08302C;border:1.5px solid #231F1C}
+[data-theme="candy"] .cls-all{background:#FF7A59;color:#fff;border:2px solid #231F1C;box-shadow:2px 2px 0 #231F1C}
+[data-theme="aurora"] .cls{background:linear-gradient(150deg,rgba(255,255,255,.13),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.15)}
+[data-theme="aurora"] .cls-it{background:rgba(255,255,255,.06)}
+[data-theme="aurora"] .cls-v{background:linear-gradient(180deg,#a78bfa,#22d3ee)}
+[data-theme="aurora"] .cls-n{background:rgba(167,139,250,.22);color:#c4b5fd}
+[data-theme="aurora"] .cls-all{background:linear-gradient(135deg,#a78bfa,#22d3ee);color:#070c1e}
+
+/* ================= 课表面板 ================= */
+.cs-day{margin-bottom:15px}
+.cs-day:last-child{margin-bottom:2px}
+.cs-day-h{display:flex;align-items:center;gap:7px;margin:0 2px 7px;font-size:10.5px;font-weight:850;letter-spacing:.12em;text-transform:uppercase;opacity:.55}
+.cs-day-h em{font-style:normal;letter-spacing:0;font-weight:850;font-size:9px;padding:2px 6px;border-radius:5px;opacity:.9}
+.cs-day-h span{margin-left:auto;font-size:9px;letter-spacing:0;opacity:.7}
+[data-theme="candy"] .cs-day-h em{background:#FF7A59;color:#fff;border:1px solid #231F1C}
+[data-theme="aurora"] .cs-day-h em{background:rgba(167,139,250,.3);color:#e9e4ff}
+.cs-it{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:11px;margin-bottom:6px}
+.cs-time{flex:none;width:72px;line-height:1.3}
+.cs-time b{display:block;font-size:11px;font-weight:850;letter-spacing:-.01em}
+.cs-time span{display:block;font-size:9px;opacity:.5;margin-top:1px}
+.cs-main{min-width:0;flex:1}
+.cs-main b{display:block;font-size:12.5px;font-weight:750;line-height:1.32;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cs-main span{display:block;font-size:10px;opacity:.55;margin-top:1px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cs-del{flex:none;width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font-size:13px;opacity:.32;transition:.15s}
+.cs-del:active{transform:scale(.9);opacity:.7}
+.cs-empty{font-size:11.5px;opacity:.45;line-height:1.85;padding:14px 2px 20px;text-align:center}
+.cs-ops{display:flex;gap:9px;margin-top:6px}
+.cs-ops button{flex:1;padding:12px;border-radius:10px;font-size:12.5px;font-weight:850;transition:transform .14s}
+.cs-ops button:active{transform:scale(.97)}
+.cs-loading{display:flex;gap:5px;justify-content:center;padding:28px 0 32px}
+.cs-loading i{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.4;animation:tp 1.2s infinite}
+.cs-loading i:nth-child(2){animation-delay:.16s}
+.cs-loading i:nth-child(3){animation-delay:.32s}
+[data-theme="candy"] .cs-it{background:#fff;border:1.5px solid rgba(35,31,28,.9);box-shadow:2px 2px 0 #FFD23F}
+[data-theme="candy"] .cs-ops .ok{background:#FF7A59;color:#fff;border:2px solid #231F1C}
+[data-theme="candy"] .cs-ops .no{background:#fff;border:2px solid #231F1C}
+[data-theme="aurora"] .cs-it{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}
+[data-theme="aurora"] .cs-ops .ok{background:linear-gradient(135deg,#a78bfa,#22d3ee);color:#070c1e}
+[data-theme="aurora"] .cs-ops .no{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2)}
+
 /* ================= 输入区 ================= */
 .composer{
   position:relative;z-index:6;flex:none;
@@ -674,6 +736,7 @@ html[data-theme="aurora"] .app::after{content:none}
     gap:0 24px;align-content:start
   }
   #view-note .sec,#view-note .note-foot,#view-note .empty{grid-column:1/-1}
+  #view-note .cls{grid-column:1/-1}
   #view-note .sec{margin-top:4px;display:none}
 
   /* ---------- 主题：糖果 ---------- */
@@ -926,6 +989,18 @@ html[data-theme="aurora"] .app::after{content:none}
     <button class="btn-ghost" id="rDel">删除这一条</button>
   </div>
 
+  <!-- 课表面板 -->
+  <div class="sheet" id="cSheet">
+    <div class="sheet-handle"></div>
+    <button class="sheet-close" id="cClose" aria-label="关闭">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.4 2.4l7.2 7.2M9.6 2.4L2.4 9.6"/></svg>
+    </button>
+    <h3 id="cTitle">我的课表</h3>
+    <p class="desc" id="cDesc"></p>
+    <div id="csBody"></div>
+    <div id="csFoot"></div>
+  </div>
+
   <!-- 图片入口 -->
   <div class="picker" id="picker">
     <div class="pk-card">
@@ -957,10 +1032,13 @@ const KEY = "campus-assistant-v1";
 const DEF = {
   profile: { name:"小助理", call:"总裁", theme:"candy", city:"", avatar:{type:"glyph", glyph:"助", color:0, img:null} },
   records: [],
+  courses: [],
   chats: [],
   seeded: false
 };
 let db = load();
+if(!Array.isArray(db.courses)) db.courses = [];
+if(!Array.isArray(db.records)) db.records = [];
 
 function load(){
   try{
@@ -1253,20 +1331,7 @@ function parseVisionJSON(text){
   });
 }
 
-async function qwenRecognize(dataUrl){
-  const body = {
-    model: QWEN.model,
-    messages: [{
-      role: "user",
-      content: [
-        { type: "image_url", image_url: { url: dataUrl } },
-        { type: "text", text: visionPrompt() }
-      ]
-    }],
-    max_tokens: 1200,
-    temperature: 0.1
-  };
-
+async function qwenVision(body){
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 45000);
   let res;
@@ -1289,8 +1354,95 @@ async function qwenRecognize(dataUrl){
   if(!res.ok || data.error){
     throw new Error(qwenError((data.error && (data.error.code || data.error.type)) || res.status, data.error && data.error.message));
   }
-  const txt = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-  return parseVisionJSON(txt);
+  return (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || "";
+}
+
+async function qwenRecognize(dataUrl){
+  const body = {
+    model: QWEN.model,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: dataUrl } },
+        { type: "text", text: visionPrompt() }
+      ]
+    }],
+    max_tokens: 1200,
+    temperature: 0.1
+  };
+  return parseVisionJSON(await qwenVision(body));
+}
+
+/* ---- 课表识别 ---- */
+function coursePrompt(){
+  const t = new Date();
+  const wl = ["日","一","二","三","四","五","六"];
+  const today = `${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())}`;
+  return `你是课表信息抽取助手。今天是 ${today}（周${wl[t.getDay()]}）。
+
+请从这张图片里找出所有课程安排，只输出严格 JSON 数组，不要解释、不要 markdown 代码块。
+
+每一项的字段：
+- title：科目名称，照原文写，例如"高等数学""大学物理实验"
+- raw_date：图中原文的日期表述，例如"11月16日""2026-11-16""周一"；没有就填空字符串
+- raw_time：图中原文的时间表述，例如"8:00-9:40""第1-2节"；没有就填空字符串
+- room：上课地点，要带上楼号和房间号，例如"3号楼402""三教 205"；没有就填空字符串
+- note：其它补充，例如任课老师、单双周；没有就填空字符串
+
+规则：
+1. 一行课就是一节课，不要把同一节课拆成多条。
+2. 时间写全起止；只有开始时间就只写开始时间。
+3. 不要抽表头、"节次""星期"这类文字。
+4. 最多 24 条。
+
+只输出 JSON 数组。`;
+}
+
+function parseCourseJSON(text){
+  let s = String(text || "").trim()
+    .replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+  const a = s.indexOf("["), b = s.lastIndexOf("]");
+  if(a >= 0 && b > a) s = s.slice(a, b + 1);
+  let arr;
+  try{ arr = JSON.parse(s); }
+  catch(e){ throw new Error("课表没读懂，换一张更清楚的截图试试。"); }
+  if(!Array.isArray(arr)) throw new Error("课表识别结果格式不对，重试一次？");
+
+  return arr.slice(0, 24).map(it => {
+    it = it || {};
+    const rawDate = String(it.raw_date || "").trim();
+    const rawTime = String(it.raw_time || "").trim();
+    const date = parseCourseDate(rawDate);
+    const tm = parseCourseTime(rawTime);
+    const wd = date != null ? new Date(date).getDay() : parseCourseWeekday(rawDate);
+    return {
+      title: String(it.title || "").trim() || "未命名课程",
+      room: String(it.room || "").trim(),
+      note: String(it.note || "").trim(),
+      date: date,
+      weekday: wd == null ? new Date().getDay() : wd,
+      start: tm.start,
+      end: tm.end,
+      rawDate: rawDate,
+      rawTime: rawTime
+    };
+  });
+}
+
+async function qwenRecognizeCourse(dataUrl){
+  const body = {
+    model: QWEN.model,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: dataUrl } },
+        { type: "text", text: coursePrompt() }
+      ]
+    }],
+    max_tokens: 1600,
+    temperature: 0.1
+  };
+  return parseCourseJSON(await qwenVision(body));
 }
 
 /* 图片压缩：拍照原图动辄几 MB，先缩到能接受的大小 */
@@ -1331,6 +1483,110 @@ function upcoming(){
 function nearest(){
   const u = upcoming().filter(r => r.due && r.due > Date.now() - DAY);
   return u[0] || upcoming()[0] || null;
+}
+
+/* ================= 课表 =================
+   一条课：{ id, title, date, weekday, start, end, room, note }
+   - weekday 0-6（0 是周日），一定有，用来排周表
+   - date 只在图里写了具体日期（11月16日 / 2026-11-16）时才存，
+     只写“周一”的按每周重复处理，这样课表不会过期
+================================================== */
+const WD_CN = ["日","一","二","三","四","五","六"];
+const PERIOD_TIME = [
+  null,
+  ["08:00","08:45"], ["08:55","09:40"],
+  ["10:00","10:45"], ["10:55","11:40"],
+  ["14:00","14:45"], ["14:55","15:40"],
+  ["16:00","16:45"], ["16:55","17:40"],
+  ["19:00","19:45"], ["19:55","20:40"],
+  ["20:50","21:35"], ["21:45","22:30"]
+];
+
+function toMin(t){
+  const m = String(t || "").match(/^(\d{1,2}):(\d{2})$/);
+  return m ? (+m[1]) * 60 + (+m[2]) : 9999;
+}
+function addMin(t, n){
+  const m = toMin(t);
+  if(m >= 1440) return "";
+  const v = Math.min(m + n, 1439);
+  return pad(Math.floor(v / 60)) + ":" + pad(v % 60);
+}
+function courseTime(c){
+  if(!c.start) return { a:"待补", b:"" };
+  return { a:c.start, b:c.end || "" };
+}
+function byStart(a, b){ return toMin(a.start) - toMin(b.start); }
+function coursesOn(wd){
+  return db.courses.filter(c => c.weekday === wd).sort(byStart);
+}
+/* 当天课程：有具体日期的看日期，只有星期的看星期几 */
+function todayCourses(){
+  const now = new Date();
+  const t0 = startOfDay(now).getTime();
+  const wd = now.getDay();
+  return db.courses
+    .filter(c => c.date ? startOfDay(new Date(c.date)).getTime() === t0 : c.weekday === wd)
+    .sort(byStart);
+}
+function mdText(ts){
+  const d = new Date(ts);
+  return `${d.getMonth()+1}/${d.getDate()}`;
+}
+
+/* 只有写了具体日期才算一次性课程；只写“周一/星期三”的按每周重复 */
+function parseCourseDate(raw){
+  const s = String(raw || "").trim();
+  if(!s) return null;
+  const hasCal = /(\d{4}\s*[-\/年]\s*\d{1,2}\s*[-\/月]\s*\d{1,2})|(\d{1,2}\s*月\s*\d{1,2})|(今天|今日|明天|明日|后天|大后天)|(\d{1,2}\s*天\s*[后内])/.test(s);
+  if(!hasCal) return null;
+  const p = parseText(s);
+  return (p.hasDate && p.due) ? startOfDay(new Date(p.due)).getTime() : null;
+}
+function parseCourseWeekday(raw){
+  const m = String(raw || "").match(/(?:周|星期)\s*([一二三四五六日天])/);
+  return m ? WEEK[m[1]] : null;
+}
+function parseCourseTime(raw){
+  const s = String(raw || "");
+  const hm = (h, m, period) => {
+    h = cnHour(String(h == null ? "" : h));
+    if(h === null || h === undefined) return null;
+    let mi = (m == null || m === "") ? 0 : parseInt(m, 10);
+    if(!(mi >= 0 && mi <= 59)) mi = 0;
+    if((period === "下午" || period === "晚上" || period === "傍晚") && h < 12) h += 12;
+    if(period === "中午" && h < 11) h += 12;
+    if(period === "凌晨" && h === 12) h = 0;
+    if(!(h >= 0 && h <= 23)) return null;
+    return pad(h) + ":" + pad(mi);
+  };
+
+  // 8:00-9:40 / 8点-9点40 / 下午2点到4点
+  let m = s.match(/(上午|早上|早晨|中午|下午|晚上|傍晚|凌晨)?\s*(\d{1,2}|[零一二两三四五六七八九十]{1,3})\s*[:：点时]\s*(\d{1,2})?\s*分?\s*[-–—~～至到]\s*(上午|早上|早晨|中午|下午|晚上|傍晚|凌晨)?\s*(\d{1,2}|[零一二两三四五六七八九十]{1,3})\s*[:：点时]\s*(\d{1,2})?\s*分?/);
+  if(m){
+    const a = hm(m[2], m[3], m[1]);
+    const b = hm(m[5], m[6], m[4] || m[1]);
+    if(a && b) return { start:a, end:b };
+  }
+
+  // 第1-2节 / 1-2节
+  m = s.match(/(?:第)?\s*(\d{1,2})\s*[-–—~～]\s*(\d{1,2})\s*节/);
+  if(m && PERIOD_TIME[+m[1]] && PERIOD_TIME[+m[2]])
+    return { start: PERIOD_TIME[+m[1]][0], end: PERIOD_TIME[+m[2]][1] };
+
+  // 第3节
+  m = s.match(/(?:第)?\s*(\d{1,2})\s*节/);
+  if(m && PERIOD_TIME[+m[1]])
+    return { start: PERIOD_TIME[+m[1]][0], end: PERIOD_TIME[+m[1]][1] };
+
+  // 只有一个时刻：晚上7点 / 14:30
+  m = s.match(/(上午|早上|早晨|中午|下午|晚上|傍晚|凌晨)?\s*(\d{1,2}|[零一二两三四五六七八九十]{1,3})\s*[:：点时]\s*(\d{1,2})?\s*分?/);
+  if(m){
+    const st = hm(m[2], m[3], m[1]);
+    if(st) return { start: st, end: addMin(st, 45) };
+  }
+
+  return { start:"", end:"" };
 }
 
 /* ================= 渲染 ================= */
@@ -1453,6 +1709,43 @@ function itemHTML(r){
   </div>`;
 }
 
+function courseCardHTML(){
+  const t = new Date();
+  const list = todayCourses();
+  const rows = list.map(c => {
+    const ct = courseTime(c);
+    return `<div class="cls-it">
+      <div class="cls-t"><b>${ct.a}</b><span>${ct.b}</span></div>
+      <div class="cls-v"></div>
+      <div class="cls-m">
+        <b>${escapeHTML(c.title)}</b>
+        <span>${c.room ? escapeHTML(c.room) : "教室待补"}</span>
+      </div>
+    </div>`;
+  }).join("");
+
+  return `<div class="cls">
+    <div class="cls-head">
+      <div>
+        <span class="cls-eyebrow">今日课程</span>
+        <b>${t.getMonth()+1}月${t.getDate()}日 周${WD_CN[t.getDay()]}</b>
+      </div>
+      <span class="cls-n">${list.length ? list.length + " 节" : "没课"}</span>
+    </div>
+    ${list.length
+      ? `<div class="cls-list">${rows}</div>`
+      : `<div class="cls-empty">${db.courses.length
+          ? "今天没课，安心干别的。"
+          : "还没导入课表。把课表截图丢给我，我按日期、时间、教室、科目记下来。"}</div>`}
+    <div class="cls-foot">
+      <button class="cls-all" id="allCourseBtn">
+        全部课表
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.4 2.6L8 6l-3.6 3.4"/></svg>
+      </button>
+    </div>
+  </div>`;
+}
+
 function renderNote(){
   const all = db.records.slice();
   const groups = [
@@ -1478,7 +1771,8 @@ function renderNote(){
   });
 
   const total = db.records.filter(r=>!r.done).length;
-  let html = `<div class="pghead"><h1>记事本</h1><p>${total} 项待办</p></div>
+  let html = `<div class="pghead"><h1>记事本</h1><p>${total} 项待办 · ${db.courses.length} 节课</p></div>
+    ${courseCardHTML()}
     <div class="sec" style="margin-top:4px">
       <span class="sec-title">记事本</span>
       <span class="sec-title">${total} 项待办</span>
@@ -2034,9 +2328,10 @@ async function send(text){
 }
 
 /* ================= 图片识别流程 ================= */
-async function handleImage(file){
+async function handleImage(file, mode){
   if(!file){ return; }
   if(!/^image\//.test(file.type || "")){ toast("只支持图片文件"); return; }
+  if(mode === "course"){ importCourseImage(file); return; }
   if(!isDesktop() && curView !== "chat") go("chat");
 
   let full, thumb;
@@ -2092,12 +2387,134 @@ function discardItems(id){
   save(); renderChat();
 }
 
+/* ================= 课表流程 ================= */
+let csDraft = null;   // 待确认的识别结果
+let csBusy = false;   // 正在识别
+
+function openCourseSheet(){
+  $("#mask").classList.add("on");
+  $("#cSheet").classList.add("on");
+  renderCourseSheet();
+}
+
+function renderCourseSheet(){
+  const body = $("#csBody"), foot = $("#csFoot");
+
+  if(csBusy){
+    $("#cTitle").textContent = "正在认课表";
+    $("#cDesc").textContent = "把图里的日期、时间、教室和科目抽出来，大概十几秒。";
+    body.innerHTML = `<div class="cs-loading"><i></i><i></i><i></i></div>`;
+    foot.innerHTML = "";
+    return;
+  }
+
+  if(csDraft){
+    $("#cTitle").textContent = `认到 ${csDraft.length} 节课`;
+    $("#cDesc").textContent = "确认没问题就存进课表；认错的点右边 × 去掉。";
+    body.innerHTML = csDraft.map((c, i) => {
+      const ct = courseTime(c);
+      const meta = ["周" + WD_CN[c.weekday], c.room || "教室待补"];
+      // 只有“11月16日”这种具体日期才额外显示，别把“周一”重复一遍
+      if(/\d/.test(c.rawDate || "")) meta.push(c.rawDate);
+      return `<div class="cs-it">
+        <div class="cs-time"><b>${ct.a}</b><span>${ct.b}</span></div>
+        <div class="cs-main"><b>${escapeHTML(c.title)}</b><span>${escapeHTML(meta.join(" · "))}</span></div>
+        <button class="cs-del" data-cdrop="${i}" aria-label="去掉">×</button>
+      </div>`;
+    }).join("");
+    foot.innerHTML = `<div class="cs-ops">
+      <button class="no" id="csCancel">不要了</button>
+      <button class="ok" id="csSave">存进课表</button>
+    </div>`;
+    return;
+  }
+
+  const total = db.courses.length;
+  $("#cTitle").textContent = "我的课表";
+  $("#cDesc").textContent = total
+    ? `共 ${total} 节课，按周一到周日排。`
+    : "还没有课。把课表截图丢进来，日期、时间、教室、科目自动抽。";
+
+  if(!total){
+    body.innerHTML = `<div class="cs-empty">课表是空的。<br>教务系统截图、班级群里的课表都行，点下面的「导入课表」。</div>`;
+  }else{
+    const order = [1,2,3,4,5,6,0];
+    const today = new Date().getDay();
+    body.innerHTML = order.map(wd => {
+      const list = coursesOn(wd);
+      if(!list.length) return "";
+      return `<div class="cs-day">
+        <div class="cs-day-h">周${WD_CN[wd]}${wd === today ? "<em>今天</em>" : ""}<span>${list.length} 节</span></div>
+        ${list.map(c => {
+          const ct = courseTime(c);
+          const meta = [c.room || "教室待补"];
+          if(c.date) meta.push(mdText(c.date));
+          if(c.note) meta.push(c.note);
+          return `<div class="cs-it">
+            <div class="cs-time"><b>${ct.a}</b><span>${ct.b}</span></div>
+            <div class="cs-main"><b>${escapeHTML(c.title)}</b><span>${escapeHTML(meta.join(" · "))}</span></div>
+            <button class="cs-del" data-cdel="${c.id}" aria-label="删除">×</button>
+          </div>`;
+        }).join("")}
+      </div>`;
+    }).join("");
+  }
+
+  foot.innerHTML = `<button class="btn-main" id="csImport">导入课表</button>
+    ${total ? `<button class="btn-ghost" id="csClear">清空课表</button>` : ""}`;
+}
+
+function saveCourses(){
+  if(!csDraft || !csDraft.length) return;
+  let added = 0, dup = 0;
+  csDraft.forEach(c => {
+    const same = db.courses.some(x =>
+      x.title === c.title && x.weekday === c.weekday &&
+      (x.start || "") === (c.start || "") && (x.room || "") === (c.room || ""));
+    if(same){ dup++; return; }
+    db.courses.push({
+      id: uid(), title: c.title, weekday: c.weekday, date: c.date || null,
+      start: c.start || "", end: c.end || "", room: c.room || "", note: c.note || ""
+    });
+    added++;
+  });
+  csDraft = null;
+  save(); closeSheet(); renderNote();
+  toast(added ? `已存 ${added} 节课${dup ? `，跳过 ${dup} 节重复` : ""}` : "这些课已经在课表里了");
+}
+
+async function importCourseImage(file){
+  let full;
+  try{ full = await compressImage(file, 1400, 0.85); }
+  catch(e){ toast("这张图打不开，换一张试试？"); return; }
+
+  csDraft = null; csBusy = true; openCourseSheet();
+  try{
+    const items = await qwenRecognizeCourse(full);
+    csBusy = false;
+    if(!items.length){
+      closeSheet();
+      toast("没认出课程，换张更清楚的截图试试");
+      return;
+    }
+    csDraft = items;
+    renderCourseSheet();
+  }catch(err){
+    csBusy = false; csDraft = null; closeSheet();
+    toast(err && err.message ? err.message : "识别失败，再试一次？");
+  }
+}
+
 /* 图片入口：桌面（无触摸）直接开文件选择，其余走「拍照 / 相册」菜单 */
 function isTouch(){
   return ("ontouchstart" in window) || (navigator.maxTouchPoints > 0);
 }
-function openImageEntry(){
+let pickCourse = false;   // 这次图片入口是「记事项」还是「录课表」
+function openImageEntry(forCourse){
+  pickCourse = !!forCourse;
   const camRow = document.querySelector('[data-pick="camera"]');
+  const ttl = document.querySelector(".pk-title");
+  if(ttl) ttl.textContent = pickCourse ? "导入课表 · 选一张图" : "添加通知截图";
   if(isDesktop() && !isTouch()){
     const gal = $("#galInput");
     if(gal){ gal.value = ""; gal.click(); }
@@ -2141,6 +2558,9 @@ function closeSheet(){
   $("#sheet").classList.remove("on");
   const rs = $("#rSheet");
   if(rs) rs.classList.remove("on");
+  const cs = $("#cSheet");
+  if(cs) cs.classList.remove("on");
+  csDraft = null; csBusy = false;
   editId = null;
   if(draft){ draft = null; document.documentElement.dataset.theme = db.profile.theme; }
 }
@@ -2229,6 +2649,41 @@ $("#rDel").addEventListener("click", ()=>{
   db.records = db.records.filter(x => x.id !== editId);
   save(); closeSheet(); renderHome(); renderNote();
   toast("已删除");
+});
+
+/* ================= 课表事件 ================= */
+$("#cClose").addEventListener("click", closeSheet);
+
+$("#cSheet").addEventListener("click", e=>{
+  const drop = e.target.closest("[data-cdrop]");
+  if(drop){
+    if(csDraft){
+      csDraft.splice(+drop.dataset.cdrop, 1);
+      if(!csDraft.length){ closeSheet(); toast("都去掉了"); return; }
+      renderCourseSheet();
+    }
+    return;
+  }
+  const del = e.target.closest("[data-cdel]");
+  if(del){
+    if(!confirm("删掉这节课？")) return;
+    db.courses = db.courses.filter(x => x.id !== del.dataset.cdel);
+    save(); renderCourseSheet(); renderNote();
+    toast("已删除");
+    return;
+  }
+  if(e.target.closest("#csCancel")){ closeSheet(); return; }
+  if(e.target.closest("#csSave")){ saveCourses(); return; }
+  if(e.target.closest("#csImport")){
+    closeSheet();
+    setTimeout(()=> openImageEntry(true), 200);
+    return;
+  }
+  if(e.target.closest("#csClear")){
+    if(!confirm("清空整张课表？")) return;
+    db.courses = []; save(); renderCourseSheet(); renderNote();
+    toast("课表已清空");
+  }
 });
 
 /* ================= 事件 ================= */
@@ -2329,7 +2784,7 @@ $("#picker").addEventListener("click", e=>{ if(e.target === $("#picker")) closeP
   el.addEventListener("change", e=>{
     const f = e.target.files && e.target.files[0];
     e.target.value = "";
-    if(f) handleImage(f);
+    if(f) handleImage(f, pickCourse ? "course" : "task");
   });
 });
 
@@ -2356,6 +2811,13 @@ document.addEventListener("click", e=>{
 
 document.querySelectorAll("[data-quick]").forEach(c=>{
   c.addEventListener("click", ()=>{ send(c.dataset.quick); });
+});
+
+// 记事本里「全部课表」（卡片是重渲染的，用委托）
+document.addEventListener("click", e=>{
+  if(!e.target.closest("#allCourseBtn")) return;
+  e.preventDefault();
+  openCourseSheet();
 });
 
 // 列表点击 -> 编辑（事件委托）
@@ -2405,7 +2867,7 @@ function seed(){
   save();
 }
 /* 版本戳：判断浏览器加载的是不是最新版 */
-const APP_VER = "v0.4.1 · 2026-11-13";
+const APP_VER = "v0.5.0 · 2026-11-13";
 (function(){
   const el = $("#verLine");
   if(el) el.textContent = APP_VER + " · 对话 " + QWEN_TEXT.primary;
