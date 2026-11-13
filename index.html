@@ -411,12 +411,16 @@ html[data-theme="aurora"] .app::after{content:none}
 .cs-loading i{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.4;animation:tp 1.2s infinite}
 .cs-loading i:nth-child(2){animation-delay:.16s}
 .cs-loading i:nth-child(3){animation-delay:.32s}
+.cs-prog{display:flex;align-items:center;justify-content:center;gap:7px;font-size:11px;opacity:.55;padding:13px 0 3px}
+.cs-prog i{width:5px;height:5px;border-radius:50%;background:currentColor;animation:tp 1.2s infinite}
 [data-theme="candy"] .cs-it{background:#fff;border:1.5px solid rgba(35,31,28,.9);box-shadow:2px 2px 0 #FFD23F}
 [data-theme="candy"] .cs-ops .ok{background:#FF7A59;color:#fff;border:2px solid #231F1C}
 [data-theme="candy"] .cs-ops .no{background:#fff;border:2px solid #231F1C}
+[data-theme="candy"] .cs-ops .ghost{background:#F3FBF9;border:2px solid #231F1C}
 [data-theme="aurora"] .cs-it{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}
 [data-theme="aurora"] .cs-ops .ok{background:linear-gradient(135deg,#a78bfa,#22d3ee);color:#070c1e}
 [data-theme="aurora"] .cs-ops .no{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2)}
+[data-theme="aurora"] .cs-ops .ghost{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.16)}
 
 /* ================= 输入区 ================= */
 .composer{
@@ -739,6 +743,10 @@ html[data-theme="aurora"] .app::after{content:none}
   #view-note .cls{grid-column:1/-1}
   #view-note .sec{margin-top:4px;display:none}
 
+  /* 课表面板在桌面上收窄居中，别横跨整个窗口 */
+  #cSheet{left:50%;right:auto;width:min(560px,90vw);transform:translate(-50%,102%)}
+  #cSheet.on{transform:translate(-50%,0)}
+
   /* ---------- 主题：糖果 ---------- */
   [data-theme="candy"] .sidebar{
     background:rgba(255,255,255,.62);border-right:1.5px solid rgba(35,31,28,.09);
@@ -1017,7 +1025,7 @@ html[data-theme="aurora"] .app::after{content:none}
     </div>
   </div>
   <input type="file" id="camInput" accept="image/*" capture="environment" style="display:none">
-  <input type="file" id="galInput" accept="image/*" style="display:none">
+  <input type="file" id="galInput" accept="image/*" multiple style="display:none">
 
   <div class="toast" id="toast"></div>
   <input type="file" id="fileInput" accept="image/*" style="display:none">
@@ -1033,11 +1041,13 @@ const DEF = {
   profile: { name:"小助理", call:"总裁", theme:"candy", city:"", avatar:{type:"glyph", glyph:"助", color:0, img:null} },
   records: [],
   courses: [],
+  periods: [],
   chats: [],
   seeded: false
 };
 let db = load();
 if(!Array.isArray(db.courses)) db.courses = [];
+if(!Array.isArray(db.periods)) db.periods = [];
 if(!Array.isArray(db.records)) db.records = [];
 
 function load(){
@@ -1373,48 +1383,99 @@ async function qwenRecognize(dataUrl){
   return parseVisionJSON(await qwenVision(body));
 }
 
-/* ---- 课表识别 ---- */
+/* ---- 课表识别 ----
+   课表和作息时间表常常是两张图分开拍的，所以每张图都按同一种结构返回：
+   { courses: [...], periods: [...] }。课程表那几张 courses 有货、periods 为空，
+   作息表那张反过来。多张图的结果在本地合并，再用 periods 把「第几节」换算成时刻。
+*/
 function coursePrompt(){
   const t = new Date();
   const wl = ["日","一","二","三","四","五","六"];
   const today = `${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())}`;
   return `你是课表信息抽取助手。今天是 ${today}（周${wl[t.getDay()]}）。
 
-请从这张图片里找出所有课程安排，只输出严格 JSON 数组，不要解释、不要 markdown 代码块。
+这张图可能是「课程表」，也可能是「作息时间表」，也可能两者都有。请判断后抽取，只输出严格 JSON 对象，不要解释、不要 markdown 代码块。
 
-每一项的字段：
+输出结构：
+{"courses":[…],"periods":[…]}
+
+courses 每一项：
 - title：科目名称，照原文写，例如"高等数学""大学物理实验"
 - raw_date：图中原文的日期表述，例如"11月16日""2026-11-16""周一"；没有就填空字符串
 - raw_time：图中原文的时间表述，例如"8:00-9:40""第1-2节"；没有就填空字符串
-- room：上课地点，要带上楼号和房间号，例如"3号楼402""三教 205"；没有就填空字符串
+- period_from：起始节次，整数。像"第1-2节"就填 1；没有就用 0
+- period_to：结束节次，整数。"第1-2节"填 2；单节就和 period_from 相同；没有就用 0
+- room：上课地点，要带楼号和房间号，例如"3号楼402""三教 205"；没有就填空字符串
 - note：其它补充，例如任课老师、单双周；没有就填空字符串
 
-规则：
-1. 一行课就是一节课，不要把同一节课拆成多条。
-2. 时间写全起止；只有开始时间就只写开始时间。
-3. 不要抽表头、"节次""星期"这类文字。
-4. 最多 24 条。
+periods 每一项（作息表里的「第几节 → 几点」对照）：
+- from：起始节次，整数
+- to：结束节次，整数；单节就填同一个数
+- start：这一段的开始时刻，24 小时制"08:00"
+- end：这一段的结束时刻，24 小时制"09:40"
 
-只输出 JSON 数组。`;
+规则：
+1. 图里只有课程、没有作息表时，periods 输出空数组 []。
+2. 图里只有作息表、没有课程时，courses 输出空数组 []。
+3. 作息表一行填一项。"第1-2节 08:00-09:40"就是 from:1,to:2,start:"08:00",end:"09:40"；"第1节 08:00-08:45"就是 from:1,to:1。
+4. 一行课就是一节课，不要把同一节课拆成多条。
+5. 时间写全起止；只有开始时间就只写开始时间。
+6. 不要抽表头、"节次""星期"这类文字。
+7. courses 最多 40 条，periods 最多 20 条。
+
+只输出 JSON 对象。`;
 }
 
+/* 模型偶尔只吐数组（老格式），也可能吐 {courses,periods}。
+   先看 [ 和 { 谁在前面，按位置决定先试哪种，避免把数组里的第一条
+   当成整个对象解析掉。 */
 function parseCourseJSON(text){
   let s = String(text || "").trim()
     .replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
-  const a = s.indexOf("["), b = s.lastIndexOf("]");
-  if(a >= 0 && b > a) s = s.slice(a, b + 1);
-  let arr;
-  try{ arr = JSON.parse(s); }
-  catch(e){ throw new Error("课表没读懂，换一张更清楚的截图试试。"); }
-  if(!Array.isArray(arr)) throw new Error("课表识别结果格式不对，重试一次？");
 
-  return arr.slice(0, 24).map(it => {
+  const tryParse = str => { try{ return JSON.parse(str); }catch(e){ return undefined; } };
+
+  const arrTry = () => {
+    const a = s.indexOf("["), b = s.lastIndexOf("]");
+    if(a < 0 || b <= a) return null;
+    const v = tryParse(s.slice(a, b + 1));
+    return Array.isArray(v) ? { courses: v, periods: [] } : null;
+  };
+  const objTry = () => {
+    const a = s.indexOf("{"), b = s.lastIndexOf("}");
+    if(a < 0 || b <= a) return null;
+    const v = tryParse(s.slice(a, b + 1));
+    if(!v || typeof v !== "object" || Array.isArray(v)) return null;
+    if(Array.isArray(v.courses) || Array.isArray(v.periods)) return v;
+    if(v.title || v.raw_time) return { courses: [v], periods: [] };
+    return null;
+  };
+
+  const ai = s.indexOf("["), oi = s.indexOf("{");
+  const order = (ai >= 0 && (oi < 0 || ai < oi)) ? [arrTry, objTry] : [objTry, arrTry];
+  let obj = null;
+  for(const fn of order){ obj = fn(); if(obj) break; }
+  if(!obj) throw new Error("课表没读懂，换一张更清楚的截图试试。");
+
+  const rawCourses = Array.isArray(obj.courses) ? obj.courses : (Array.isArray(obj) ? obj : []);
+  const rawPeriods = Array.isArray(obj.periods) ? obj.periods : [];
+
+  const courses = rawCourses.slice(0, 40).map(it => {
     it = it || {};
     const rawDate = String(it.raw_date || "").trim();
     const rawTime = String(it.raw_time || "").trim();
     const date = parseCourseDate(rawDate);
     const tm = parseCourseTime(rawTime);
     const wd = date != null ? new Date(date).getDay() : parseCourseWeekday(rawDate);
+
+    // 节次优先用正则从原文里抠，抠不到再用模型给的字段
+    let pf = tm.pf, pt = tm.pt;
+    const mf = parseInt(it.period_from, 10) || 0;
+    const mt = parseInt(it.period_to, 10) || 0;
+    if(!pf && mf > 0){ pf = mf; pt = mt > 0 ? mt : mf; }
+    if(!pt) pt = pf;
+    if(pf && pt < pf) pt = pf;
+
     return {
       title: String(it.title || "").trim() || "未命名课程",
       room: String(it.room || "").trim(),
@@ -1423,10 +1484,23 @@ function parseCourseJSON(text){
       weekday: wd == null ? new Date().getDay() : wd,
       start: tm.start,
       end: tm.end,
+      fixS: !!tm.start,
+      fixE: !!tm.end,
+      pf: pf,
+      pt: pt,
       rawDate: rawDate,
       rawTime: rawTime
     };
   });
+
+  const periods = rawPeriods.slice(0, 20).map(p => {
+    p = p || {};
+    const from = parseInt(p.from, 10) || 0;
+    const to = parseInt(p.to, 10) || from;
+    return { from: from, to: to, start: String(p.start || "").trim(), end: String(p.end || "").trim() };
+  }).filter(p => p.from > 0 && p.to >= p.from && (p.start || p.end));
+
+  return { courses: courses, periods: periods };
 }
 
 async function qwenRecognizeCourse(dataUrl){
@@ -1439,7 +1513,7 @@ async function qwenRecognizeCourse(dataUrl){
         { type: "text", text: coursePrompt() }
       ]
     }],
-    max_tokens: 1600,
+    max_tokens: 2000,
     temperature: 0.1
   };
   return parseCourseJSON(await qwenVision(body));
@@ -1486,12 +1560,15 @@ function nearest(){
 }
 
 /* ================= 课表 =================
-   一条课：{ id, title, date, weekday, start, end, room, note }
+   一条课：{ id, title, date, weekday, start, end, room, note, pf, pt }
    - weekday 0-6（0 是周日），一定有，用来排周表
    - date 只在图里写了具体日期（11月16日 / 2026-11-16）时才存，
      只写“周一”的按每周重复处理，这样课表不会过期
+   - pf / pt 是起止节次（"第1-2节" → 1 / 2）。课表和作息表分开拍时，
+     课程那张只有节次没有时刻，等作息表那张也认完了再换算成 start / end
 ================================================== */
 const WD_CN = ["日","一","二","三","四","五","六"];
+/* 默认作息表：图里没给作息表时按这个折算 */
 const PERIOD_TIME = [
   null,
   ["08:00","08:45"], ["08:55","09:40"],
@@ -1501,6 +1578,51 @@ const PERIOD_TIME = [
   ["19:00","19:45"], ["19:55","20:40"],
   ["20:50","21:35"], ["21:45","22:30"]
 ];
+
+/* 把 db.periods（[{n,start,end}]）摊成 { 节次: {start,end} } 方便查 */
+function periodMap(){
+  const m = {};
+  (db.periods || []).forEach(p => {
+    if(p && p.n > 0) m[p.n] = { start: p.start || "", end: p.end || "" };
+  });
+  return m;
+}
+/* 把一次识别出的作息表并进 map；一段课（1-2 节）只知道首节开始、末节结束 */
+function mergePeriods(map, blocks){
+  (blocks || []).forEach(b => {
+    const from = +b.from, to = +b.to || from;
+    if(!(from > 0) || !(to >= from)) return;
+    for(let n = from; n <= to; n++){
+      const cur = map[n] || { start:"", end:"" };
+      map[n] = {
+        start: n === from ? (b.start || cur.start || "") : (cur.start || ""),
+        end:   n === to   ? (b.end   || cur.end   || "") : (cur.end || "")
+      };
+    }
+  });
+  return map;
+}
+/* 按节次取时刻：作息表里有就用，没有退回默认作息表 */
+function resolvePeriodTime(from, to, m){
+  const a = (m && m[from]) || {};
+  const b = (m && m[to || from]) || {};
+  let start = a.start || (PERIOD_TIME[from] ? PERIOD_TIME[from][0] : "");
+  let end   = b.end   || (PERIOD_TIME[to] ? PERIOD_TIME[to][1] : "");
+  if(!start && b.start) start = b.start;
+  if(!end && a.end) end = a.end;
+  return { start: start, end: end };
+}
+/* 有节次没时刻的，按当前作息表重算一遍。
+   注意是「每次重算」而不是「填一次」：作息表可能比课程表晚认出来，
+   先按默认表填过的值必须能被后到的真实作息表覆盖。
+   fixS / fixE 表示这条课图里直接给了时刻，那就别动它。 */
+function settleCourse(c, m){
+  if(!(c.pf > 0)) return c;
+  const r = resolvePeriodTime(c.pf, c.pt || c.pf, m || {});
+  if(!c.fixS && r.start) c.start = r.start;
+  if(!c.fixE && r.end) c.end = r.end;
+  return c;
+}
 
 function toMin(t){
   const m = String(t || "").match(/^(\d{1,2}):(\d{2})$/);
@@ -1566,27 +1688,31 @@ function parseCourseTime(raw){
   if(m){
     const a = hm(m[2], m[3], m[1]);
     const b = hm(m[5], m[6], m[4] || m[1]);
-    if(a && b) return { start:a, end:b };
+    if(a && b) return { start:a, end:b, pf:0, pt:0 };
   }
 
-  // 第1-2节 / 1-2节
+  // 第1-2节 / 1-2节 —— 只记节次，时刻等作息表来换算
   m = s.match(/(?:第)?\s*(\d{1,2})\s*[-–—~～]\s*(\d{1,2})\s*节/);
-  if(m && PERIOD_TIME[+m[1]] && PERIOD_TIME[+m[2]])
-    return { start: PERIOD_TIME[+m[1]][0], end: PERIOD_TIME[+m[2]][1] };
+  if(m){
+    const a = +m[1], b = +m[2];
+    if(a > 0 && a <= 12 && b >= a && b <= 12) return { start:"", end:"", pf:a, pt:b };
+  }
 
   // 第3节
   m = s.match(/(?:第)?\s*(\d{1,2})\s*节/);
-  if(m && PERIOD_TIME[+m[1]])
-    return { start: PERIOD_TIME[+m[1]][0], end: PERIOD_TIME[+m[1]][1] };
+  if(m){
+    const a = +m[1];
+    if(a > 0 && a <= 12) return { start:"", end:"", pf:a, pt:a };
+  }
 
   // 只有一个时刻：晚上7点 / 14:30
   m = s.match(/(上午|早上|早晨|中午|下午|晚上|傍晚|凌晨)?\s*(\d{1,2}|[零一二两三四五六七八九十]{1,3})\s*[:：点时]\s*(\d{1,2})?\s*分?/);
   if(m){
     const st = hm(m[2], m[3], m[1]);
-    if(st) return { start: st, end: addMin(st, 45) };
+    if(st) return { start: st, end: addMin(st, 45), pf:0, pt:0 };
   }
 
-  return { start:"", end:"" };
+  return { start:"", end:"", pf:0, pt:0 };
 }
 
 /* ================= 渲染 ================= */
@@ -1736,7 +1862,7 @@ function courseCardHTML(){
       ? `<div class="cls-list">${rows}</div>`
       : `<div class="cls-empty">${db.courses.length
           ? "今天没课，安心干别的。"
-          : "还没导入课表。把课表截图丢给我，我按日期、时间、教室、科目记下来。"}</div>`}
+          : "还没导入课表。课程表和作息表可以分开拍，一次选多张一起认。"}</div>`}
     <div class="cls-foot">
       <button class="cls-all" id="allCourseBtn">
         全部课表
@@ -2328,10 +2454,16 @@ async function send(text){
 }
 
 /* ================= 图片识别流程 ================= */
-async function handleImage(file, mode){
-  if(!file){ return; }
-  if(!/^image\//.test(file.type || "")){ toast("只支持图片文件"); return; }
-  if(mode === "course"){ importCourseImage(file); return; }
+async function handleImage(input, mode){
+  // 可能是一次粘贴的单张 File，也可能是相册多选的 FileList
+  const files = (typeof File !== "undefined" && input instanceof File) ? [input] : Array.from(input || []);
+  if(!files.length){ return; }
+  const imgs = files.filter(f => /^image\//.test(f.type || ""));
+  if(!imgs.length){ toast("只支持图片文件"); return; }
+  if(mode === "course"){ importCourseImages(imgs); return; }
+
+  // 记事项这条链路仍然一张一张来
+  const file = imgs[0];
   if(!isDesktop() && curView !== "chat") go("chat");
 
   let full, thumb;
@@ -2388,8 +2520,11 @@ function discardItems(id){
 }
 
 /* ================= 课表流程 ================= */
-let csDraft = null;   // 待确认的识别结果
-let csBusy = false;   // 正在识别
+let csDraft = null;    // 待确认的课程（多张图累加）
+let csPeriods = {};    // 本次识别出的作息表 { 节次: {start,end} }
+let csBusy = false;    // 正在识别
+let csProg = "";       // 进度文案
+let csShots = 0;       // 本次已经认过几张图
 
 function openCourseSheet(){
   $("#mask").classList.add("on");
@@ -2397,20 +2532,37 @@ function openCourseSheet(){
   renderCourseSheet();
 }
 
+/* 每次渲染都重算时刻：作息表可能比课程表晚认出来，要能回头补上 */
+function settleDraft(){
+  if(!csDraft) return;
+  csDraft.forEach(c => settleCourse(c, csPeriods));
+}
+
 function renderCourseSheet(){
   const body = $("#csBody"), foot = $("#csFoot");
 
-  if(csBusy){
+  // 还一节课都没认出来，只显示进度
+  if(csBusy && !csDraft){
     $("#cTitle").textContent = "正在认课表";
-    $("#cDesc").textContent = "把图里的日期、时间、教室和科目抽出来，大概十几秒。";
+    $("#cDesc").textContent = csProg || "把图里的日期、时间、教室和科目抽出来，大概十几秒。";
     body.innerHTML = `<div class="cs-loading"><i></i><i></i><i></i></div>`;
     foot.innerHTML = "";
     return;
   }
 
   if(csDraft){
+    settleDraft();
+    const pn = Object.keys(csPeriods || {}).length;
+    const parts = [];
+    if(csShots > 1) parts.push(`合并了 ${csShots} 张图`);
+    if(pn) parts.push(`作息表覆盖 ${pn} 节`);
+    const head = parts.length ? parts.join(" · ") + "。" : "";
+
     $("#cTitle").textContent = `认到 ${csDraft.length} 节课`;
-    $("#cDesc").textContent = "确认没问题就存进课表；认错的点右边 × 去掉。";
+    $("#cDesc").textContent = csBusy
+      ? (csProg || "继续认…")
+      : head + "确认没问题就存进课表；认错的点右边 × 去掉。";
+
     body.innerHTML = csDraft.map((c, i) => {
       const ct = courseTime(c);
       const meta = ["周" + WD_CN[c.weekday], c.room || "教室待补"];
@@ -2422,10 +2574,14 @@ function renderCourseSheet(){
         <button class="cs-del" data-cdrop="${i}" aria-label="去掉">×</button>
       </div>`;
     }).join("");
-    foot.innerHTML = `<div class="cs-ops">
-      <button class="no" id="csCancel">不要了</button>
-      <button class="ok" id="csSave">存进课表</button>
-    </div>`;
+
+    foot.innerHTML = csBusy
+      ? `<div class="cs-prog"><i></i>${escapeHTML(csProg || "正在认…")}</div>`
+      : `<div class="cs-ops">
+          <button class="no" id="csCancel">不要了</button>
+          <button class="ghost" id="csMore">再加一张</button>
+          <button class="ok" id="csSave">存进课表</button>
+        </div>`;
     return;
   }
 
@@ -2433,10 +2589,10 @@ function renderCourseSheet(){
   $("#cTitle").textContent = "我的课表";
   $("#cDesc").textContent = total
     ? `共 ${total} 节课，按周一到周日排。`
-    : "还没有课。把课表截图丢进来，日期、时间、教室、科目自动抽。";
+    : "还没有课。课程表和作息表可以分开拍，一次选多张一起认，我按节次对上时间。";
 
   if(!total){
-    body.innerHTML = `<div class="cs-empty">课表是空的。<br>教务系统截图、班级群里的课表都行，点下面的「导入课表」。</div>`;
+    body.innerHTML = `<div class="cs-empty">课表是空的。<br>课程表、作息表、教务系统截图都行，支持一次选多张，点下面的「导入课表」。</div>`;
   }else{
     const order = [1,2,3,4,5,6,0];
     const today = new Date().getDay();
@@ -2466,6 +2622,19 @@ function renderCourseSheet(){
 
 function saveCourses(){
   if(!csDraft || !csDraft.length) return;
+  settleDraft();
+
+  // 作息表存下来，以后单独再导课程表也能直接对上时间
+  if(csPeriods && Object.keys(csPeriods).length){
+    const keep = {};
+    (db.periods || []).forEach(p => { if(p && p.n > 0) keep[p.n] = p; });
+    Object.keys(csPeriods).forEach(k => {
+      const n = +k, v = csPeriods[k] || {}, cur = keep[n] || {};
+      keep[n] = { n: n, start: v.start || cur.start || "", end: v.end || cur.end || "" };
+    });
+    db.periods = Object.keys(keep).map(k => keep[k]).sort((a, b) => a.n - b.n);
+  }
+
   let added = 0, dup = 0;
   csDraft.forEach(c => {
     const same = db.courses.some(x =>
@@ -2474,35 +2643,58 @@ function saveCourses(){
     if(same){ dup++; return; }
     db.courses.push({
       id: uid(), title: c.title, weekday: c.weekday, date: c.date || null,
-      start: c.start || "", end: c.end || "", room: c.room || "", note: c.note || ""
+      start: c.start || "", end: c.end || "", room: c.room || "", note: c.note || "",
+      pf: c.pf || 0, pt: c.pt || 0
     });
     added++;
   });
-  csDraft = null;
+
+  csDraft = null; csPeriods = {}; csShots = 0; csProg = "";
   save(); closeSheet(); renderNote();
   toast(added ? `已存 ${added} 节课${dup ? `，跳过 ${dup} 节重复` : ""}` : "这些课已经在课表里了");
 }
 
-async function importCourseImage(file){
-  let full;
-  try{ full = await compressImage(file, 1400, 0.85); }
-  catch(e){ toast("这张图打不开，换一张试试？"); return; }
+/* 多张图一起认：课程表和作息表可以分开拍，最后在本地合并 */
+async function importCourseImages(files){
+  const list = Array.from(files || []).filter(f => /^image\//.test(f.type || ""));
+  if(!list.length){ toast("只支持图片文件"); return; }
 
-  csDraft = null; csBusy = true; openCourseSheet();
-  try{
-    const items = await qwenRecognizeCourse(full);
-    csBusy = false;
-    if(!items.length){
-      closeSheet();
-      toast("没认出课程，换张更清楚的截图试试");
-      return;
-    }
-    csDraft = items;
-    renderCourseSheet();
-  }catch(err){
-    csBusy = false; csDraft = null; closeSheet();
-    toast(err && err.message ? err.message : "识别失败，再试一次？");
+  const imgs = [];
+  for(const f of list){
+    try{ imgs.push(await compressImage(f, 1400, 0.85)); }catch(e){}
   }
+  if(!imgs.length){ toast("这些图都打不开，换几张试试？"); return; }
+
+  // 「再加一张」时是追加，不要清掉已经认出来的
+  if(!csDraft){ csDraft = null; csPeriods = {}; csShots = 0; }
+  const begin = csShots;
+  csBusy = true; csProg = ""; openCourseSheet();
+
+  const errs = [];
+  for(let i = 0; i < imgs.length; i++){
+    csProg = `正在认第 ${begin + i + 1} 张（共 ${begin + imgs.length} 张）`;
+    renderCourseSheet();
+    try{
+      const r = await qwenRecognizeCourse(imgs[i]);
+      csShots++;
+      if(r.courses && r.courses.length) csDraft = (csDraft || []).concat(r.courses);
+      if(r.periods && r.periods.length) mergePeriods(csPeriods, r.periods);
+      if(!r.courses.length && !r.periods.length)
+        errs.push(`第 ${begin + i + 1} 张没认出课程或作息表`);
+    }catch(err){
+      errs.push((err && err.message) || `第 ${begin + i + 1} 张没认出来`);
+    }
+  }
+
+  csBusy = false; csProg = "";
+  renderCourseSheet();
+
+  if(!csDraft || !csDraft.length){
+    closeSheet();
+    toast(errs[0] || "没认出课程，换张更清楚的截图试试");
+    return;
+  }
+  if(errs.length) toast(errs[0]);
 }
 
 /* 图片入口：桌面（无触摸）直接开文件选择，其余走「拍照 / 相册」菜单 */
@@ -2514,7 +2706,9 @@ function openImageEntry(forCourse){
   pickCourse = !!forCourse;
   const camRow = document.querySelector('[data-pick="camera"]');
   const ttl = document.querySelector(".pk-title");
-  if(ttl) ttl.textContent = pickCourse ? "导入课表 · 选一张图" : "添加通知截图";
+  if(ttl) ttl.textContent = pickCourse ? "导入课表 · 可多选" : "添加通知截图";
+  const al = $("#pkAlbumLabel");
+  if(al) al.textContent = pickCourse ? "从相册选择（可多选）" : "从相册选择";
   if(isDesktop() && !isTouch()){
     const gal = $("#galInput");
     if(gal){ gal.value = ""; gal.click(); }
@@ -2560,7 +2754,8 @@ function closeSheet(){
   if(rs) rs.classList.remove("on");
   const cs = $("#cSheet");
   if(cs) cs.classList.remove("on");
-  csDraft = null; csBusy = false;
+  csDraft = null; csBusy = false; csProg = "";
+  csPeriods = {}; csShots = 0;
   editId = null;
   if(draft){ draft = null; document.documentElement.dataset.theme = db.profile.theme; }
 }
@@ -2674,6 +2869,11 @@ $("#cSheet").addEventListener("click", e=>{
   }
   if(e.target.closest("#csCancel")){ closeSheet(); return; }
   if(e.target.closest("#csSave")){ saveCourses(); return; }
+  if(e.target.closest("#csMore")){
+    // 不关面板，直接再选图；认完追加到当前草稿
+    openImageEntry(true);
+    return;
+  }
   if(e.target.closest("#csImport")){
     closeSheet();
     setTimeout(()=> openImageEntry(true), 200);
@@ -2782,9 +2982,10 @@ $("#picker").addEventListener("click", e=>{ if(e.target === $("#picker")) closeP
   const el = $(sel);
   if(!el) return;
   el.addEventListener("change", e=>{
-    const f = e.target.files && e.target.files[0];
+    // 先把 FileList 拷成数组：清空 value 会连带把 files 清掉
+    const fs = Array.from(e.target.files || []);
     e.target.value = "";
-    if(f) handleImage(f, pickCourse ? "course" : "task");
+    if(fs.length) handleImage(fs, pickCourse ? "course" : "task");
   });
 });
 
@@ -2867,7 +3068,7 @@ function seed(){
   save();
 }
 /* 版本戳：判断浏览器加载的是不是最新版 */
-const APP_VER = "v0.5.0 · 2026-11-13";
+const APP_VER = "v0.6.0 · 2026-11-13";
 (function(){
   const el = $("#verLine");
   if(el) el.textContent = APP_VER + " · 对话 " + QWEN_TEXT.primary;
