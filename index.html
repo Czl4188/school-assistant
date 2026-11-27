@@ -2271,46 +2271,117 @@ function noteAnswerLocal(t){
   return `${hit.title}：${hit.note}`;
 }
 
-/* 本地兜底用：模型连不上时也能回答"今天/明天/周三有什么课" */
+/* 把「下周五 / 本周三 / 周五 / 下周日」解析成具体日期。
+   中文习惯的规则：
+   - 「周五 / 星期三」不带前缀 → 最近的那个（含今天）
+   - 「这/本周五」→ 本自然周的周五（周一为一周起点），可能已经过去
+   - 「下周五 / 下个星期五 / 下礼拜五」→ 下一个自然周的周五，不是「+7 天」也不是本周五
+   - 「下下周五 / 再下周五」→ 再下一个自然周
+   - 「下周」不带星期 → 整周查询（d 为 null，week 给出那一周的周一）
+   shift：null=没提前缀（按最近的那个算），0=本周，1=下周，2=下下周 */
+function courseTargetDate(t, now){
+  now = now || new Date();
+  const day0 = startOfDay(now);
+  const mw = String(t || "").match(/(?:周|星期|礼拜)\s*([一二三四五六日天])/);
+  const wd = mw ? WEEK[mw[1]] : null;
+
+  let shift = null;
+  // 「下下」「再下」必须先判，否则会被「下周」吃掉
+  if(/(下下|再下)\s*个?\s*(?:周|星期|礼拜)/.test(t)) shift = 2;
+  else if(/下\s*个?\s*(?:周|星期|礼拜)/.test(t)) shift = 1;
+  else if(/(这|本)\s*个?\s*(?:周|星期|礼拜)/.test(t)) shift = 0;
+
+  if(wd == null && shift === null) return null;
+
+  // 没提前缀：最近的那个星期几（含今天）
+  if(shift === null){
+    let off = 0;
+    for(let k = 0; k < 7; k++){
+      const x = new Date(day0); x.setDate(x.getDate() + k);
+      if(x.getDay() === wd){ off = k; break; }
+    }
+    const d = new Date(day0); d.setDate(d.getDate() + off);
+    return { d: d, week: null, wd: wd, shift: null };
+  }
+
+  // 有「这周/下周/下下周」：以周一为起点算，不是加 7 天
+  const mon = mondayOf(now);
+  const base = new Date(mon); base.setDate(base.getDate() + shift * 7);
+  if(wd == null) return { d: null, week: base, wd: null, shift: shift };
+
+  const offInWeek = (wd + 6) % 7;   // 周一=0 … 周日=6
+  const d = new Date(base); d.setDate(d.getDate() + offInWeek);
+  return { d: d, week: base, wd: wd, shift: shift };
+}
+
+/* 回答里必须带日期，用户才能一眼核对：「下周五（12/4）」 */
+function courseDayLabel(d, shift, wd, now){
+  now = now || new Date();
+  const off = Math.round((startOfDay(d).getTime() - startOfDay(now).getTime()) / 864e5);
+  const md = `${d.getMonth()+1}/${d.getDate()}`;
+  const wdn = "周" + WD_CN[wd == null ? d.getDay() : wd];
+  let pre = "";
+  if(shift === 1) pre = "下";
+  else if(shift === 2) pre = "下下";
+  else if(shift === 0) pre = "本";
+  if(off === 0) return `今天（${md} ${wdn}）`;
+  if(off === 1) return `明天（${md} ${wdn}）`;
+  if(off === 2) return `后天（${md} ${wdn}）`;
+  return `${pre}${wdn}（${md}）` + (off < 0 ? "，已经过了" : "");
+}
+
+/* 本地兜底用：模型连不上时也能回答"今天/明天/下周五有什么课"
+   注意顺序：「后天」要判在「明天」前面；「下下周五」由 courseTargetDate 内部先判 */
 function courseAnswerLocal(t){
   const now = new Date();
-  let off = null;
-  if(/今天|今日/.test(t)) off = 0;
-  else if(/明天|明日/.test(t)) off = 1;
+  const day0 = startOfDay(now);
+  let d = null, shift = null, wd = null;
+
+  if(/今天|今日/.test(t)){ d = new Date(day0); }
+  else if(/后天/.test(t)){ d = new Date(day0); d.setDate(d.getDate() + 2); }
+  else if(/明天|明日/.test(t)){ d = new Date(day0); d.setDate(d.getDate() + 1); }
   else{
-    const m = t.match(/(?:周|星期)([一二三四五六日天])/);
-    if(m){
-      const target = WEEK[m[1]];
-      for(let k = 0; k < 8; k++){
-        const d = new Date(now); d.setDate(d.getDate() + k);
-        if(d.getDay() === target){ off = k; break; }
+    const tg = courseTargetDate(t, now);
+    if(!tg) return "";
+    // 整周查询（「下周有什么课」）：没有具体星期，就把那周每天有课的列出来
+    if(!tg.d){
+      const out = [];
+      for(let i = 0; i < 7; i++){
+        const x = new Date(tg.week); x.setDate(x.getDate() + i);
+        const l = coursesAt(x);
+        if(l.length) out.push(`· ${courseDayLabel(x, tg.shift, null, now)} ${l.length} 节：` +
+          l.map(c => { const ct = courseTime(c); return `${ct.b ? ct.a + "-" + ct.b : ct.a} ${c.title}`; }).join("、"));
       }
+      const pre = tg.shift === 2 ? "下下周" : tg.shift === 1 ? "下周" : "本周";
+      return out.length ? `${pre}有课：\n` + out.join("\n") : `${pre}没课。`;
     }
+    d = tg.d; shift = tg.shift; wd = tg.wd;
   }
-  if(off === null) return "";
-  const d = new Date(now); d.setDate(d.getDate() + off);
+
   const list = coursesAt(d);
-  const label = off === 0 ? "今天" : off === 1 ? "明天" : "周" + WD_CN[d.getDay()];
+  const label = courseDayLabel(d, shift, wd, now);
   if(!list.length) return `${label}没课。`;
-  return `${label}有 ${list.length} 节：\n` + list.map(c=>{
+  return `${label}有 ${list.length} 节：\n` + list.map(c => {
     const ct = courseTime(c);
     const span = ct.b ? `${ct.a}-${ct.b}` : ct.a;
     return `· ${span} ${c.title}${c.room ? "（" + c.room + "）" : ""}`;
   }).join("\n");
 }
 
-/* 喂给大模型的课程上下文：未来 7 天，够回答"今天/明天/周三有什么课"，
-   又不至于把整张课表塞进提示词。超出 7 天的，模型会直说看不到。 */
+/* 喂给大模型的课程上下文：未来 14 天，够回答"今天/明天/周三/下周五有什么课"，
+   又不至于把整张课表塞进提示词。每行带日期和「第N周」，方便单双周核对。 */
 function courseSnapshot(){
   if(!Array.isArray(db.courses) || !db.courses.length) return "";
   const now = new Date();
   const out = [];
-  for(let off = 0; off < 7; off++){
+  for(let off = 0; off < 14; off++){
     const d = new Date(now);
     d.setDate(d.getDate() + off);
     const list = coursesAt(d);
-    const label = off === 0 ? "今天" : off === 1 ? "明天" : "周" + WD_CN[d.getDay()];
-    const dateStr = `${d.getMonth()+1}/${d.getDate()}`;
+    // 超过两天后会有两个「周五」，必须带上「后天」和日期才分得清
+    const label = off === 0 ? "今天" : off === 1 ? "明天" : off === 2 ? "后天" : "周" + WD_CN[d.getDay()];
+    const wn = weekNoOf(d);
+    const dateStr = `${d.getMonth()+1}/${d.getDate()}` + (wn > 0 ? ` · 第${wn}周` : "");
     if(!list.length){ out.push(`${label}（${dateStr}）：没课`); continue; }
     const txt = list.map(c=>{
       const t = courseTime(c);
@@ -2768,6 +2839,22 @@ function replyLocal(text){
     if(nd) return nd;
     return `我在的，${call}。想记事情就带上时间，比如「11月15日 23:59 建模报名」；想问什么也直接说。`;
   }
+
+  // 补录：给已有事项补 / 改时间（"X 是 11月30日""X 改到周五"）
+  if((p.startAt || p.due) && /(改成|改到|改为|补上|应该是|不是|就是|是)/.test(t)){
+    const hit = db.records.filter(r => !r.done).find(r=>{
+      const s = String(r.title || "");
+      for(let i = 0; i < s.length - 1; i++){ if(t.includes(s.slice(i, i + 2))) return true; }
+      return false;
+    });
+    if(hit){
+      const before = hit.startAt ? formatTimeRange(hit) : "未设置时间";
+      applyPatch(hit, { raw_time: t });
+      save(); renderHome(); renderNote();
+      const after = hit.startAt ? formatTimeRange(hit) : "未设置时间";
+      return `改好了，${call}。\n「${hit.title}」— ${after}` + (before !== after ? `\n（原来是 ${before}）` : "");
+    }
+  }
   // 既不像正经事、也没有明确时间点（"我是你老公""今天好累啊"），绝不写进记事本
   if(!looksLikeTask(t) && !hasExplicitTime(t)){
     return `在的，${call}。\n想记事情就带上时间，比如「11月15日 23:59 建模报名」；想聊两句也随时说。`;
@@ -2837,13 +2924,14 @@ function buildSysPrompt(list, hint){
 【记事本快照】
 ${snapshotText(list)}
 
-【课程】（未来 7 天；问更远的日子就说课表里看不到）
+【课程】（未来 14 天，每行带日期和「第N周」；问更远的日子就说课表里看不到）
 ${cs || "（还没导入课表）"}
 
 【判断意图】只输出一个 JSON 对象，不要代码块、不要任何解释：
-{"intent":"...","reply":"...","items":[],"done_indexes":[],"city":""}
+{"intent":"...","reply":"...","items":[],"done_indexes":[],"target_index":0,"city":""}
 
 intent 取值：
+- update：用户在给【记事本快照】里**已有**的事项补时间 / 改时间 / 改备注（不是新的一件事）
 - record：用户给出需要记录的截止信息（作业 / 竞赛 / 考试 / 活动）
 - query：用户在问自己的事（最近有什么、这周几件、某门课有什么、今天/明天有什么课、在哪上课、要带什么）
 - complete：用户说某件事做完了 / 交了
@@ -2851,7 +2939,9 @@ intent 取值：
 - chat：其它一切（闲聊、问时间、问你是谁、吐槽、求鼓励）
 
 【示例】照这个感觉判断：
-"明天晚上8点交数据结构实验报告" → record
+"无偿献血那个活动是11月30日" → update（快照里已经有这件，只是补时间）
+"把数据结构作业改到12月1日" → update
+"明天晚上8点交数据结构实验报告" → record（新的一件事）
 "数学建模国赛报名做完了" → complete
 "最近有什么要交的" → query
 "这周有几件事" → query
@@ -2866,14 +2956,19 @@ intent 取值：
 "杭州天气怎么样" → weather
 
 【判断顺序】严格按这个顺序走：
+0. 这句话说的是【记事本快照】里已经有的那件事，而且是在给它补时间、改时间、补地点 → update。
+   典型说法：「X 那个活动是 11月30日」「X 改到周五」「X 在教三 201」「X 不是 12 月 1 号，是 12 月 2 号」。
+   判不准是不是同一件事时，看快照里的标题是否被提到（说简称也算）。
 1. 句子里有未来的时间（明天 / 后天 / 今晚 / 下周 / 11月15日 / 晚上8点 / 3天后 等），
-   并且是在说一件要做的事 → record
+   并且是在说一件**快照里没有**的新事 → record
 2. 说"做完了 / 交了 / 提交了 / 搞定了 / 划掉"，而且没有未来时间 → complete
 3. 是疑问句（带 ？ / 吗 / 呢 / 什么 / 谁 / 怎么 / 几点 / 多少 / 哪）→ query（问自己的待办）或 chat（问别的）
 4. 问天气 → weather
 5. 其余 → chat
 
 特别注意（容易错的）：
+- "无偿献血那个活动是11月30日" 是 update，绝对不是 record——它是在补已有事项的时间，
+  判成 record 会多出一条重复的待办。
 - "明天晚上8点交数据结构实验报告" 是 record，因为有未来时间，是要做的事，不是已完成。
 - "数据结构实验报告我交了" 才是 complete。
 - "你是谁""你好""在吗""今天星期几" 这种没有具体事项的，一律 chat，items 留空。
@@ -2885,16 +2980,23 @@ reply 写什么：
 - query 只能依据【记事本快照】和【课程】回答，两处都没有就说没有，绝不编造事项、时间、地点。
 - 问"在哪办 / 要带什么 / 怎么报名"，看快照条目后面的「备注」段，照抄里面的信息，不要自己补充。
 - 句子里只要出现"课 / 上课 / 教室 / 老师 / 第几节"，先看【课程】再回答；"今天有什么"（没说"课"）才是问截止事项。
-- 问课程、教室、老师，看【课程】段。只给了未来 7 天，问更远的就直接说课表里看不到。
+- 问课程、教室、老师，看【课程】段（未来 14 天，每天带日期和「第N周」）。
+- 日期词按中文习惯理解：「周五」= 最近的那个周五（含今天）；「本周五」= 本自然周；
+  「下周五」= 下一个自然周的周五，不是 7 天后，也不是本周五；「下下周五」= 再下一个自然周。
+- 回答任何一天的课，都必须把日期写出来，例如「下周五（12/4）有 2 节」，让用户能核对。
+- 【课程】段里没有的日期，直接说「课表里看不到那天」，绝对不要拿别的天顶替。
 - chat 里被问到现在几点、今天几号、星期几，直接用【现在】里的信息回答。
 - 不知道就直说不知道，不要编。
 - record / complete 的 reply 只写一句轻轻确认，不要自己写具体日期时间，系统会补。
 
 其它字段：
-- items：intent=record 时填写，每项 {"title","raw_time","kind","note"}。
-  title 是事项简称，20 字内；raw_time 原样抄用户说的时间（如"11月15日 23:59""明天晚上8点"），
-  用户没给时间就留空字符串；kind 取 作业/竞赛/考试/活动/其他 之一；note 是地点、材料等补充，可空。
-  一句话里有多件事就拆成多条。
+- items：intent=record 或 update 时填写，每项 {"title","raw_time","kind","note"}。
+  - record：填新事项的完整信息。title 是事项简称，20 字内；raw_time 原样抄用户说的时间
+    （如"11月15日 23:59""明天晚上8点"），用户没给时间就留空字符串；
+    kind 取 作业/竞赛/考试/活动/其他 之一；note 是地点、材料等补充，可空。
+    一句话里有多件事就拆成多条。
+  - update：只填要改的字段，没提到的留空字符串。补时间就填 raw_time；补地点就填 note。
+- target_index：intent=update 时必填，填【记事本快照】里那件事的编号（数字，从 1 开始）。
 - done_indexes：intent=complete 时，填【记事本快照】里对应条目的编号（数字数组）。
 - city：intent=weather 时填城市名；用户没说、你也不知道就留空字符串。`
   + (hint ? `\n\n【补充要求】${hint}` : "");
@@ -3009,6 +3111,59 @@ function normItem(it){
   return { title, due, startAt, endAt, allDay, kind, note:String(it.note || "").trim(), dueText };
 }
 
+function normTitle(s){
+  return String(s || "").replace(/[\s·・,，。.、;；:：!！?？()（）\[\]【】"'“”]/g, "").toLowerCase();
+}
+
+/* 找「同一件事」：先看完全同名，再看互相包含（"无偿献血活动" ↔ "中桥大学无偿献血活动"）。
+   只用于「补录应该改而不是新增」，匹配不到就返回 null，宁可不合也不要合错。 */
+function findSameRecord(title){
+  const t = normTitle(title);
+  if(t.length < 2) return null;
+  const pool = db.records.filter(r => !r.done);
+  const exact = pool.find(r => normTitle(r.title) === t);
+  if(exact) return exact;
+  if(t.length < 4) return null;
+  return pool.find(r=>{
+    const rt = normTitle(r.title);
+    if(rt.length < 4) return false;
+    return rt.indexOf(t) >= 0 || t.indexOf(rt) >= 0;
+  }) || null;
+}
+
+/* 把一条「补录」落到已有记录上：只改给到的字段，没给的保持原样。
+   返回 true 表示确实改了东西。 */
+function applyPatch(rec, it){
+  if(!rec || !it) return false;
+  let touched = false;
+  const raw2 = String(it.raw_time || "").trim();
+  // 两种来源：模型原始 item（带 raw_time）或 normItem 的产物（已经算好 startAt/due）
+  let p = null;
+  if(it.startAt || it.due){
+    p = { startAt: it.startAt || null, endAt: it.endAt || null, allDay: !!it.allDay, due: it.due || null };
+  }else if(raw2){
+    p = parseText(raw2);
+  }
+  if(p && (p.startAt || p.due)){
+    // 只给了日期（全天）而原记录同一天已经有精确时刻：不要用手写日期把时刻冲掉
+    const sameDayAllDay = p.allDay && rec.startAt && !rec.allDay &&
+      String(rec.startAt).slice(0, 10) === String(p.startAt || "").slice(0, 10);
+    if(!sameDayAllDay){
+      rec.startAt = p.startAt || (p.due ? toLocalISO(p.due) : null);
+      rec.endAt = p.endAt || null;
+      rec.allDay = !!p.allDay;
+      rec.due = p.due || (rec.startAt ? fromLocalISO(rec.startAt).getTime() : null);
+      touched = true;
+    }
+  }
+  const nt = String(it.note || "").trim();
+  if(nt && nt !== rec.note){ rec.note = nt; touched = true; }
+  const nti = String(it.title || "").trim();
+  if(nti && normTitle(nti) !== normTitle(rec.title)){ rec.title = nti; touched = true; }
+  if(touched) rec.updatedAt = Date.now();
+  return touched;
+}
+
 function looksLikeQuestion(t){
   t = String(t || "").trim();
   if(!t) return false;
@@ -3042,7 +3197,26 @@ async function applyIntent(d, raw){
   const call = db.profile.call || "总裁";
   const intent = String(d.intent || "");
 
-  /* —— 归纳日程：写入记事本 —— */
+  /* —— 补录 / 改已有事项：只改时间、备注、名称，不新增 —— */
+  if(intent === "update"){
+    const idx = parseInt(d.target_index, 10);
+    let rec = (idx >= 1 && lastSnapshot[idx - 1]) ? lastSnapshot[idx - 1] : null;
+    const it0 = (Array.isArray(d.items) ? d.items[0] : null) || {};
+    if(!rec && it0.title) rec = findSameRecord(it0.title);
+    if(!rec) return (d.reply || "").trim() || `没找到要改的那件事，${call}说个更完整点的名字？`;
+
+    const before = rec.startAt ? formatTimeRange(rec) : "未设置时间";
+    if(!applyPatch(rec, it0)){
+      return `没听出要改什么，${call}说具体点？比如「无偿献血那个活动是11月30日」。`;
+    }
+    save(); renderHome(); renderNote();
+    const after = rec.startAt ? formatTimeRange(rec) : "未设置时间";
+    const head = (d.reply || "").trim();
+    return (head && head.length <= 24 ? head : `改好了，${call}。`) + "\n" +
+      `「${rec.title}」— ${after}` + (before !== after ? `\n（原来是 ${before}）` : "");
+  }
+
+  /* —— 归纳日程：写入记事本（同名的当作补录，不新增） —— */
   if(intent === "record"){
     const items = (Array.isArray(d.items) ? d.items : []).map(normItem).filter(Boolean);
 
@@ -3054,21 +3228,38 @@ async function applyIntent(d, raw){
     if(!items.length){
       return (d.reply || "").trim() || `这句我没听出截止时间，${call}说具体点？比如「11月15日 23:59 建模报名」。`;
     }
+
+    const added = [], merged = [];
     items.forEach(it=>{
+      const same = findSameRecord(it.title);
+      if(same){
+        // 记事本里已经有这件事：按补录处理，改时间/备注，绝不新增一条
+        applyPatch(same, it);
+        merged.push(same);
+        return;
+      }
       db.records.push({
         id: uid(), title: it.title,
         startAt: it.startAt || null, endAt: it.endAt || null, allDay: !!it.allDay,
         due: it.due, kind: it.kind,
         note: it.note, done: false, createdAt: Date.now()
       });
+      added.push(it);
     });
     save(); renderHome(); renderNote();
 
     const head = (d.reply || "").trim();
-    const lines = items.map(it=>`「${it.title}」— ${it.dueText}`);
-    const tight = items.some(it=> it.due && dayDiff(it.due) <= 1);
-    return (head && head.length <= 30 ? head : `记好了，${call}。`) + "\n" + lines.join("\n") +
-      (tight ? "\n时间有点紧，要不要现在排一下？" : "");
+    const out = [];
+    if(added.length){
+      out.push((head && head.length <= 30 ? head : `记好了，${call}。`) + "\n" +
+        added.map(it=>`「${it.title}」— ${it.dueText}`).join("\n"));
+    }
+    if(merged.length){
+      out.push((added.length ? "另外，已合并到原有记录：" : "记事本里已经有这条，改了它：") + "\n" +
+        merged.map(r=>`「${r.title}」— ${r.startAt ? formatTimeRange(r) : "未设置时间"}`).join("\n"));
+    }
+    const tight = added.some(it=> it.due && dayDiff(it.due) <= 1);
+    return out.join("\n") + (tight ? "\n时间有点紧，要不要现在排一下？" : "");
   }
 
   /* —— 完成 —— */
@@ -4477,7 +4668,7 @@ function seed(){
   save();
 }
 /* 版本戳：判断浏览器加载的是不是最新版 */
-const APP_VER = "v0.13.0 · 2026-11-27";
+const APP_VER = "v0.15.0 · 2026-11-27";
 (function(){
   const el = $("#verLine");
   if(el) el.textContent = APP_VER + " · 对话 " + QWEN_TEXT.primary;
