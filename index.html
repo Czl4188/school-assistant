@@ -403,6 +403,27 @@ html[data-theme="aurora"] .app::after{content:none}
 .cs-main span{display:block;font-size:10px;opacity:.55;margin-top:1px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cs-del{flex:none;width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font-size:13px;opacity:.32;transition:.15s}
 .cs-del:active{transform:scale(.9);opacity:.7}
+
+/* ---- 课表行：点开就地编辑 ---- */
+.cs-it{cursor:pointer}
+.cs-it-edit{display:block;cursor:default;padding:12px}
+@keyframes csEditIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+.cs-it-edit{animation:csEditIn .16s ease-out}
+.cs-edit-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;cursor:pointer}
+.cs-edit-h>b{font-size:9.5px;font-weight:850;letter-spacing:.14em;text-transform:uppercase;opacity:.45}
+.cs-f{display:block;margin-bottom:9px}
+.cs-f>i{display:block;font-size:9px;font-style:normal;font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.42;margin:0 0 5px 2px}
+.cs-it-edit .field{font-size:12.5px;padding:8px 10px;border-radius:10px}
+.cs-wd{display:flex;gap:4px}
+.cs-wd-b{flex:1;padding:6px 0;font-size:10.5px;font-weight:800;border-radius:8px;opacity:.55;transition:.14s}
+.cs-wd-b.on{opacity:1}
+.cs-timeline{display:flex;align-items:center;gap:6px}
+.cs-timeline .field{flex:1;min-width:0}
+.cs-dash{flex:none;opacity:.35;font-size:11px}
+.cs-edit-ops{display:flex;gap:8px;margin-top:11px}
+.cs-btn{flex:1;padding:9px;border-radius:10px;font-size:12.5px;font-weight:850;transition:transform .14s,opacity .14s}
+.cs-btn:active{transform:scale(.97)}
+.cs-btn:disabled{opacity:.4}
 .cs-empty{font-size:11.5px;opacity:.45;line-height:1.85;padding:14px 2px 20px;text-align:center}
 .cs-ops{display:flex;gap:9px;margin-top:6px}
 .cs-ops button{flex:1;padding:12px;border-radius:10px;font-size:12.5px;font-weight:850;transition:transform .14s}
@@ -421,6 +442,18 @@ html[data-theme="aurora"] .app::after{content:none}
 [data-theme="candy"] .cs-ops .ghost{background:#F3FBF9;border:2px solid #231F1C}
 [data-theme="aurora"] .cs-it{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}
 [data-theme="aurora"] .cs-it-warn{border-color:rgba(251,191,36,.65);box-shadow:0 0 0 1px rgba(251,191,36,.2)}
+[data-theme="candy"] .cs-it-edit{background:#FFFBEF;border:2px solid #231F1C;box-shadow:3px 3px 0 #FFD23F}
+[data-theme="candy"] .cs-wd-b{border:1.5px solid rgba(35,31,28,.26);background:#fff;color:#231F1C}
+[data-theme="candy"] .cs-wd-b.on{background:#231F1C;color:#fff;border-color:#231F1C}
+[data-theme="candy"] .cs-btn.cs-ok{background:#FF7A59;color:#fff;border:2px solid #231F1C}
+[data-theme="candy"] .cs-btn.cs-ok:disabled{background:#E7E2D9;color:rgba(35,31,28,.32);border-color:rgba(35,31,28,.2)}
+[data-theme="candy"] .cs-btn.cs-ghost{background:#fff;border:2px solid #231F1C;color:#231F1C}
+[data-theme="aurora"] .cs-it-edit{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);box-shadow:0 0 0 1px rgba(167,139,250,.18)}
+[data-theme="aurora"] .cs-wd-b{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.04);color:#e9e4ff}
+[data-theme="aurora"] .cs-wd-b.on{background:linear-gradient(135deg,#a78bfa,#22d3ee);color:#070c1e;border-color:transparent}
+[data-theme="aurora"] .cs-btn.cs-ok{background:linear-gradient(135deg,#a78bfa,#22d3ee);color:#070c1e;border:0}
+[data-theme="aurora"] .cs-btn.cs-ok:disabled{background:rgba(255,255,255,.1);color:rgba(255,255,255,.3)}
+[data-theme="aurora"] .cs-btn.cs-ghost{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);color:inherit}
 [data-theme="aurora"] .cs-ops .ok{background:linear-gradient(135deg,#a78bfa,#22d3ee);color:#070c1e}
 [data-theme="aurora"] .cs-ops .no{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2)}
 [data-theme="aurora"] .cs-ops .ghost{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.16)}
@@ -1174,7 +1207,7 @@ function fromLocalISO(s){
 }
 /* 时间段正则：08:30-11:30 / 8:30到11:30 / 8:30~11:30 / 上午8点半到11点半 / 下午2点到4点 / 23:00-次日01:00
    放在这里是因为迁移函数在初始化阶段就要用它，不能等到 parseText 附近才声明。 */
-const RANGE_RE = /(上午|早上|早晨|中午|下午|晚上|傍晚|凌晨)?\s*(\d{1,2}|[零一二两三四五六七八九十]{1,3})\s*[:：点时]\s*(\d{1,2})?\s*分?\s*(半)?\s*[-–—~～到至]\s*(次日|第二天|隔天)?\s*(上午|早上|早晨|中午|下午|晚上|傍晚|凌晨)?\s*(\d{1,2}|[零一二两三四五六七八九十]{1,3})\s*[:：点时]\s*(\d{1,2})?\s*分?\s*(半)?/;
+const RANGE_RE = /(?<p1>上午|早上|早晨|中午|下午|晚上|傍晚|凌晨)?\s*(?<h1>\d{1,2}|[零一二两三四五六七八九十]{1,3})\s*[:：点时]\s*(?<mi1>\d{1,2})?\s*分?\s*(?<half1>半)?\s*(?:[-–—~～到至])\s*(?<next>次日|第二天|隔天)?\s*(?:(?<y2>\d{4})\s*[-\/.]\s*(?<mo2>\d{1,2})\s*[-\/.]\s*(?<d2>\d{1,2})\s*[日号]?\s*)?(?<p2>上午|早上|早晨|中午|下午|晚上|傍晚|凌晨)?\s*(?<h2>\d{1,2}|[零一二两三四五六七八九十]{1,3})\s*[:：点时]\s*(?<mi2>\d{1,2})?\s*分?\s*(?<half2>半)?/;
 
 /* 全应用唯一的时间展示函数：聊天回执、列表卡片、详情/编辑预览都调它 */
 function formatTimeRange(item){
@@ -1278,17 +1311,27 @@ function hmParts(hStr, mStr, period, half){
 }
 
 /* 从原文里取时段结束时刻，落到 startAt 的同一天（跨天则次日） */
+/* 由区间匹配结果算出结束时刻：
+   结束侧自带完整日期（2026.12.01 13:15-2026.12.01 16:00）就以它为准；
+   写了「次日」或结束早于开始，则顺延一天。 */
+function rangeEndFromMatch(m, startDate){
+  const g = (m && m.groups) || {};
+  const eh = hmParts(g.h2, g.mi2, g.p2 || g.p1, !!g.half2);
+  if(!eh) return null;
+  const e = new Date(startDate);
+  if(g.y2) e.setFullYear(+g.y2, +g.mo2 - 1, +g.d2);
+  e.setHours(eh.h, eh.m, 0, 0);
+  if(g.next) e.setDate(e.getDate() + 1);
+  else if(!g.y2 && e.getTime() <= startDate.getTime()) e.setDate(e.getDate() + 1);
+  return toLocalISO(e.getTime());
+}
+
 function findRangeEnd(text, startAtISO){
   const s = fromLocalISO(startAtISO);
   if(!s) return null;
   const m = String(" " + (text || "") + " ").match(RANGE_RE);
   if(!m) return null;
-  const eh = hmParts(m[7], m[8], m[6] || m[1], !!m[9]);
-  if(!eh) return null;
-  const e = new Date(s);
-  e.setHours(eh.h, eh.m, 0, 0);
-  if(m[5] || e.getTime() <= s.getTime()) e.setDate(e.getDate() + 1);
-  return toLocalISO(e.getTime());
+  return rangeEndFromMatch(m, s);
 }
 
 /* 由 parseText 已有的日期/时刻结果，装配成结构化时间 */
@@ -1304,14 +1347,8 @@ function buildWhen(raw, hasDate, hasTime, due){
   out.startAt = toLocalISO(due);
   const m = String(" " + (raw || "") + " ").match(RANGE_RE);
   if(m){
-    const eh = hmParts(m[7], m[8], m[6] || m[1], !!m[9]);
-    if(eh){
-      const e = new Date(d);
-      e.setHours(eh.h, eh.m, 0, 0);
-      // 明确写了"次日"或结束早于开始，都算跨到第二天
-      if(m[5] || e.getTime() <= d.getTime()) e.setDate(e.getDate() + 1);
-      out.endAt = toLocalISO(e.getTime());
-    }
+    const endIso = rangeEndFromMatch(m, d);
+    if(endIso) out.endAt = endIso;
   }
   return out;
 }
@@ -1350,7 +1387,8 @@ function parseText(raw){
   }
 
   // ---- 日期 ----
-  const ymd = s.match(/(\d{4})\s*[-\/年]\s*(\d{1,2})\s*[-\/月]\s*(\d{1,2})\s*[日号]?/);
+  // 2026-12-01 / 2026/12/01 / 2026.12.01 / 2026年12月1日 都认
+  const ymd = s.match(/(\d{4})\s*[-\/年.]\s*(\d{1,2})\s*[-\/月.]\s*(\d{1,2})\s*[日号]?/);
   if(ymd){
     base = new Date(+ymd[1], +ymd[2]-1, +ymd[3]); hasDate = true; cut.push(ymd[0]);
   }
@@ -1463,11 +1501,17 @@ function visionPrompt(){
 3. 只有当整张图只讲报名、完全没有活动主体时，才输出一条报名类事项。
 
 【第二原则：时间只能来自通知正文，且只取事项本身的执行时间】
-1. raw_time 只抄通知正文里写明的活动 / 会议 / 考试 / 作业截止时间，原样抄：不改写、不统一格式、不补年份、不换算。
+1. raw_time 只抄通知正文文字里写明的活动 / 会议 / 考试 / 作业截止时间，原样抄：不改写、不统一格式、不补年份、不换算。
 2. 报名时间、报名截止时间不作为任何事项的主时间。原文如果写了报名截止，写进 note 的文字里，不要放进 raw_time。
 3. 表单界面上显示的时间（表单卡片、"最近截止"标签、提交按钮旁的时间）不是通知规定的截止时间，只能填进 form_time，绝对不能写进 raw_time。
 4. 通知正文没写时间的事项，raw_time 必须填空字符串；time_state 按下面字段说明在 "none" 和 "unclear" 里选。
 5. 原文提了时间但没认准（模糊、残缺、被裁掉）时，time_state 填 "unclear"。
+
+【第三原则：只认正文文字，不认海报上的字】
+1. 海报、横幅、宣传图里的时间（艺术字、图形排版里的日期时刻）不算数，只能填进 poster_time。
+2. raw_time 只取正文文字里写的时间，典型长这样："活动时间：2026.12.01 13:15-2026.12.01 16:00"。
+3. 同一张图里正文和海报都写了时间，以正文为准；海报那个不要拿来用，也不要说"两者不一致"。
+4. 正文没写时间、只有海报上有时，raw_time 留空、time_state 填 "none"，不要用海报时间补。
 
 只输出严格 JSON 数组，不要解释、不要 markdown 代码块。
 
@@ -1476,6 +1520,7 @@ function visionPrompt(){
 - raw_time：通知正文里的时间原文；没有就填空字符串
 - time_state："stated" 原文明确写了时间 / "unclear" 本该有时间但原文没写清 / "none" 这条本来就没有时间要求
   · 拿不准时选 "unclear"，不要选 "stated"
+- poster_time：海报 / 横幅 / 宣传图上的时间原文，只作参考；没有就填空字符串
 - form_time：表单界面上显示的时间原文，只作参考；没有就填空字符串
 - kind：从 作业 / 竞赛 / 考试 / 活动 / 其他 中选一个
 - note：要带什么、怎么报名、注意事项，一句话；没有就填空字符串
@@ -1527,6 +1572,7 @@ function parseVisionJSON(text){
     const title = String(it.title || "").trim() || "未命名事项";
     const raw = String(it.raw_time || "").trim();
     const formRaw = String(it.form_time || "").trim();
+    const posterRaw = String(it.poster_time || "").trim();   // 海报时间只留档，不参与展示
     // 模型常把标签一起抄进来（"最近截止 11月30日 23:59"），去掉前缀只留时间
     const formTxt = formRaw.replace(/^(最近)?(报名|提交)?截止(时间|日期)?\s*[:：]?\s*/, "").trim() || formRaw;
     let note = String(it.note || "").trim();
@@ -1585,7 +1631,7 @@ function parseVisionJSON(text){
       dueText = raw ? `${raw}（时间没认准，可手动改）` : "(时间没认准，可手动改)";
     }
 
-    return { title, due, kind, note, raw, formRaw, dueText, state, startAt, endAt, allDay };
+    return { title, due, kind, note, raw, formRaw, posterRaw, dueText, state, startAt, endAt, allDay };
   });
 }
 
@@ -3131,6 +3177,120 @@ function settleDraft(){
   csDraft.forEach(c => settleCourse(c, csPeriods));
 }
 
+/* ================= 课表行内编辑 =================
+   同一时间只允许一行处于编辑态。csEdit 里存的是表单的「草稿值」：
+   输入时只更新这个对象、不重绘，否则每敲一个字都会丢焦点。 */
+let csEdit = null;   // { mode:"draft"|"saved", key, title, teacher, weekday, start, end }
+
+function isHHMM(v){
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test(String(v || ""));
+}
+
+function courseEditValid(){
+  if(!csEdit) return false;
+  if(!String(csEdit.title || "").trim()) return false;
+  const s = csEdit.start, e = csEdit.end;
+  if(s && !isHHMM(s)) return false;
+  if(e && !isHHMM(e)) return false;
+  // 结束早于开始不让存；相等允许
+  if(s && e && toMin(e) < toMin(s)) return false;
+  return true;
+}
+
+function courseEditHTML(delAttr){
+  const e = csEdit;
+  const wdBtns = [1,2,3,4,5,6,0].map(w =>
+    `<button type="button" class="cs-wd-b${w === e.weekday ? " on" : ""}" data-edit-wd="${w}">周${WD_CN[w]}</button>`
+  ).join("");
+  return `<div class="cs-it cs-it-edit" data-editrow>
+    <div class="cs-edit-h" data-edit-close><b>编辑这节课</b><button class="cs-del" ${delAttr} aria-label="删除">×</button></div>
+    <label class="cs-f"><i>课程名</i>
+      <input class="field" data-edit-f="title" maxlength="30" value="${escapeHTML(e.title)}" placeholder="例如 高等数学I">
+    </label>
+    <div class="cs-f"><i>星期</i><div class="cs-wd">${wdBtns}</div></div>
+    <label class="cs-f"><i>教师</i>
+      <input class="field" data-edit-f="teacher" maxlength="12" value="${escapeHTML(e.teacher)}" placeholder="不填就显示「老师待补」">
+    </label>
+    <div class="cs-f"><i>时间</i>
+      <div class="cs-timeline">
+        <input class="field" type="time" data-edit-f="start" value="${e.start}">
+        <span class="cs-dash">–</span>
+        <input class="field" type="time" data-edit-f="end" value="${e.end}">
+      </div>
+    </div>
+    <div class="cs-edit-ops">
+      <button type="button" class="cs-btn cs-ghost" data-edit-cancel>取消</button>
+      <button type="button" class="cs-btn cs-ok" data-edit-save${courseEditValid() ? "" : " disabled"}>保存</button>
+    </div>
+  </div>`;
+}
+
+function openCourseEdit(mode, key){
+  const c = mode === "draft" ? csDraft[+key] : db.courses.find(x => x.id === key);
+  if(!c) return;
+  csEdit = {
+    mode: mode,
+    key: key,
+    title: c.title || "",
+    teacher: c.teacher || "",
+    weekday: c.weekday == null ? new Date().getDay() : c.weekday,
+    start: c.start || "",
+    end: c.end || ""
+  };
+  renderCourseSheet();
+  const inp = document.querySelector('[data-edit-f="title"]');
+  if(inp && inp.focus){ inp.focus(); if(inp.select) inp.select(); }
+}
+
+function closeCourseEdit(){
+  csEdit = null;
+  renderCourseSheet();
+}
+
+function setEditWeekday(w){
+  if(!csEdit) return;
+  csEdit.weekday = w;
+  document.querySelectorAll("[data-edit-wd]").forEach(b =>
+    b.classList.toggle("on", +b.dataset.editWd === w));
+}
+
+function syncEditSave(){
+  const btn = document.querySelector("[data-edit-save]");
+  if(btn) btn.disabled = !courseEditValid();
+}
+
+function commitCourseEdit(){
+  if(!csEdit || !courseEditValid()) return;
+  const e = csEdit;
+  const title = String(e.title || "").trim();
+  const teacher = String(e.teacher || "").trim();
+  const start = e.start || "";
+  const end = e.end || "";
+
+  if(e.mode === "draft"){
+    const c = csDraft && csDraft[+e.key];
+    if(c){
+      c.title = title; c.teacher = teacher; c.weekday = e.weekday;
+      c.start = start; c.end = end;
+      // 手改过时间就清掉节次：不清的话 settleDraft() 会按作息表把时刻换算回去
+      c.pf = 0; c.pt = 0; c.fixS = true; c.fixE = true;
+    }
+    csEdit = null;
+    renderCourseSheet();   // 草稿不落库，等「存进课表」
+    return;
+  }
+
+  const c = db.courses.find(x => x.id === e.key);
+  csEdit = null;
+  if(!c){ renderCourseSheet(); return; }
+  c.title = title; c.teacher = teacher; c.weekday = e.weekday;
+  c.start = start; c.end = end;
+  // 清 pf/pt + 置 fixS/fixE：否则作息表会把用户手填的时刻盖掉
+  c.pf = 0; c.pt = 0; c.fixS = true; c.fixE = true;
+  save(); renderCourseSheet(); renderNote();
+  toast("已保存");
+}
+
 function renderCourseSheet(){
   const body = $("#csBody"), foot = $("#csFoot");
 
@@ -3160,13 +3320,16 @@ function renderCourseSheet(){
           : "确认没问题就存进课表；认错的点右边 × 去掉。");
 
     body.innerHTML = csDraft.map((c, i) => {
+      // 正在编辑的这条，原地换成表单
+      if(csEdit && csEdit.mode === "draft" && +csEdit.key === i)
+        return courseEditHTML(`data-cdrop="${i}"`);
       const ct = courseTime(c);
       // 教室不是必填字段了，有才显示，别每行都挂个「教室待补」
       const meta = ["周" + WD_CN[c.weekday], c.teacher || "老师待补"];
       if(c.room) meta.push(c.room);
       // 只有“11月16日”这种具体日期才额外显示，别把“周一”重复一遍
       if(/\d/.test(c.rawDate || "")) meta.push(c.rawDate);
-      return `<div class="cs-it${c.teacher ? "" : " cs-it-warn"}">
+      return `<div class="cs-it${c.teacher ? "" : " cs-it-warn"}" data-drow="${i}">
         <div class="cs-time"><b>${ct.a}</b><span>${ct.b}</span></div>
         <div class="cs-main"><b>${escapeHTML(c.title)}</b><span>${escapeHTML(meta.join(" · "))}</span></div>
         <button class="cs-del" data-cdrop="${i}" aria-label="去掉">×</button>
@@ -3200,13 +3363,15 @@ function renderCourseSheet(){
       return `<div class="cs-day">
         <div class="cs-day-h">周${WD_CN[wd]}${wd === today ? "<em>今天</em>" : ""}<span>${list.length} 节</span></div>
         ${list.map(c => {
+          if(csEdit && csEdit.mode === "saved" && csEdit.key === c.id)
+            return courseEditHTML(`data-cdel="${c.id}"`);
           const ct = courseTime(c);
           const meta = [c.teacher || "老师待补"];
           if(c.room) meta.push(c.room);
           if(c.hours) meta.push(c.hours + "学时");
           if(c.date) meta.push(mdText(c.date));
           if(c.note) meta.push(c.note);
-          return `<div class="cs-it">
+          return `<div class="cs-it${c.teacher ? "" : " cs-it-warn"}" data-srow="${c.id}">
             <div class="cs-time"><b>${ct.a}</b><span>${ct.b}</span></div>
             <div class="cs-main"><b>${escapeHTML(c.title)}</b><span>${escapeHTML(meta.join(" · "))}</span></div>
             <button class="cs-del" data-cdel="${c.id}" aria-label="删除">×</button>
@@ -3718,6 +3883,7 @@ function closeSheet(){
   if(ts) ts.classList.remove("on");
   csDraft = null; csBusy = false; csProg = "";
   csPeriods = {}; csShots = 0;
+  csEdit = null;   // 关面板时一并丢掉未保存的编辑态
   // 时间核对的来源保留在内存里，关掉再打开还能接着补图
   tvBusy = false; tvProg = "";
   editId = null;
@@ -3884,9 +4050,16 @@ $("#tSheet").addEventListener("click", e=>{
 $("#cClose").addEventListener("click", closeSheet);
 
 $("#cSheet").addEventListener("click", e=>{
+  // —— 编辑卡里的按钮先处理，处理完不再往下走 ——
+  if(e.target.closest("[data-edit-save]")){ commitCourseEdit(); return; }
+  if(e.target.closest("[data-edit-cancel]")){ closeCourseEdit(); return; }
+  const wb = e.target.closest("[data-edit-wd]");
+  if(wb){ setEditWeekday(+wb.dataset.editWd); return; }
+
   const drop = e.target.closest("[data-cdrop]");
   if(drop){
     if(csDraft){
+      csEdit = null;
       csDraft.splice(+drop.dataset.cdrop, 1);
       if(!csDraft.length){ closeSheet(); toast("都去掉了"); return; }
       renderCourseSheet();
@@ -3897,10 +4070,17 @@ $("#cSheet").addEventListener("click", e=>{
   if(del){
     if(!confirm("删掉这节课？")) return;
     db.courses = db.courses.filter(x => x.id !== del.dataset.cdel);
+    // 删掉的正是当前编辑的那条，编辑态跟着关掉
+    if(csEdit && csEdit.mode === "saved" && csEdit.key === del.dataset.cdel) csEdit = null;
     save(); renderCourseSheet(); renderNote();
     toast("已删除");
     return;
   }
+  // 点编辑卡头部：收起（× 在上面已被前面拦掉）
+  if(e.target.closest("[data-edit-close]")){ closeCourseEdit(); return; }
+  // 点在编辑卡其余空白处：吞掉，别把卡片收起来
+  if(e.target.closest("[data-editrow]")) return;
+
   if(e.target.closest("#csCancel")){ closeSheet(); return; }
   if(e.target.closest("#csSave")){ saveCourses(); return; }
   if(e.target.closest("#csMore")){
@@ -3915,8 +4095,62 @@ $("#cSheet").addEventListener("click", e=>{
   }
   if(e.target.closest("#csClear")){
     if(!confirm("清空整张课表？")) return;
+    csEdit = null;
     db.courses = []; save(); renderCourseSheet(); renderNote();
     toast("课表已清空");
+    return;
+  }
+
+  // —— 点普通行：原地展开；再点同一行收起。换一行则先收起上一行 ——
+  const row = e.target.closest(".cs-it");
+  if(!row) return;
+  if(row.dataset.drow != null){
+    const i = +row.dataset.drow;
+    if(csEdit && csEdit.mode === "draft" && +csEdit.key === i) closeCourseEdit();
+    else openCourseEdit("draft", i);
+    return;
+  }
+  if(row.dataset.srow != null){
+    const id = row.dataset.srow;
+    if(csEdit && csEdit.mode === "saved" && csEdit.key === id) closeCourseEdit();
+    else openCourseEdit("saved", id);
+  }
+});
+
+/* 编辑卡里的输入：只更新 csEdit，不重绘，免得每敲一个字就丢焦点 */
+$("#cSheet").addEventListener("input", e=>{
+  const f = e.target.closest("[data-edit-f]");
+  if(!f || !csEdit) return;
+  const k = f.dataset.editF;
+  if(k === "start"){
+    csEdit.start = f.value;
+    // 开始有值、结束还空着 → 自动补 45 分钟
+    if(f.value && !csEdit.end){
+      const auto = addMin(f.value, 45);
+      csEdit.end = auto;
+      const endEl = document.querySelector('[data-edit-f="end"]');
+      if(endEl) endEl.value = auto;
+    }
+  }else if(k === "end"){
+    csEdit.end = f.value;
+  }else if(k === "title"){
+    csEdit.title = f.value;
+  }else if(k === "teacher"){
+    csEdit.teacher = f.value;
+  }
+  syncEditSave();
+});
+
+/* Enter 保存 / Esc 取消（只在输入框里生效，免得干扰按钮的默认行为） */
+$("#cSheet").addEventListener("keydown", e=>{
+  if(!csEdit || !e.target.closest("[data-editrow]")) return;
+  if(e.target.tagName !== "INPUT") return;
+  if(e.key === "Enter"){
+    e.preventDefault();
+    if(courseEditValid()) commitCourseEdit();
+  }else if(e.key === "Escape"){
+    e.preventDefault();
+    closeCourseEdit();
   }
 });
 
@@ -4102,7 +4336,7 @@ function seed(){
   save();
 }
 /* 版本戳：判断浏览器加载的是不是最新版 */
-const APP_VER = "v0.10.0 · 2026-11-27";
+const APP_VER = "v0.11.0 · 2026-11-27";
 (function(){
   const el = $("#verLine");
   if(el) el.textContent = APP_VER + " · 对话 " + QWEN_TEXT.primary;
