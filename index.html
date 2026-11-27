@@ -414,10 +414,13 @@ html[data-theme="aurora"] .app::after{content:none}
 .cs-prog{display:flex;align-items:center;justify-content:center;gap:7px;font-size:11px;opacity:.55;padding:13px 0 3px}
 .cs-prog i{width:5px;height:5px;border-radius:50%;background:currentColor;animation:tp 1.2s infinite}
 [data-theme="candy"] .cs-it{background:#fff;border:1.5px solid rgba(35,31,28,.9);box-shadow:2px 2px 0 #FFD23F}
+/* 没认到老师的条目：描边换成警示色，一眼能看见 */
+[data-theme="candy"] .cs-it-warn{box-shadow:2px 2px 0 #FF9F45;border-color:#FF7A59}
 [data-theme="candy"] .cs-ops .ok{background:#FF7A59;color:#fff;border:2px solid #231F1C}
 [data-theme="candy"] .cs-ops .no{background:#fff;border:2px solid #231F1C}
 [data-theme="candy"] .cs-ops .ghost{background:#F3FBF9;border:2px solid #231F1C}
 [data-theme="aurora"] .cs-it{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}
+[data-theme="aurora"] .cs-it-warn{border-color:rgba(251,191,36,.65);box-shadow:0 0 0 1px rgba(251,191,36,.2)}
 [data-theme="aurora"] .cs-ops .ok{background:linear-gradient(135deg,#a78bfa,#22d3ee);color:#070c1e}
 [data-theme="aurora"] .cs-ops .no{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2)}
 [data-theme="aurora"] .cs-ops .ghost{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.16)}
@@ -1460,7 +1463,18 @@ courses 每一项：
 - period_from：起始节次，整数。像"第1-2节"就填 1；没有就用 0
 - period_to：结束节次，整数。"第1-2节"填 2；单节就和 period_from 相同；没有就用 0
 - room：上课地点，要带楼号和房间号，例如"3号楼402""三教 205"；没有就填空字符串
-- note：其它补充，例如任课老师、单双周；没有就填空字符串
+- teacher：任课老师姓名，**能看见就必须填**，例如"王建国""李老师"。只填姓名，不要加"任课教师："这类前缀；没有就填空字符串
+- hours：总学时，整数，图里写了就填（例如"48"），没有就用 0
+- credit：学分，数字，图里写了就填（例如 3.0），没有就用 0
+- note：其它补充，例如单双周、上课周次；没有就填空字符串
+
+很多学校的课表一格是斜杠分隔的，例如：
+「高等数学I/(3-3节)3-18周/本部 10-309/刘文斌/64/4.0」
+这种要按顺序拆开，不要整段塞进 title：
+  第1段 → title       第2段 → 节次（填 period_from / period_to）
+  第3段 → 周次（写进 note，例如"3-18周"）  第4段 → room（"本部 10-309"要保留校区和教室号）
+  第5段 → teacher     第6段 → hours     第7段 → credit
+看到几段就拆几段，段数不足时按顺序贪心匹配，别把教师名丢掉。
 
 periods 每一项（作息表里的「第几节 → 几点」对照）：
 - from：起始节次，整数
@@ -1472,12 +1486,76 @@ periods 每一项（作息表里的「第几节 → 几点」对照）：
 1. 图里只有课程、没有作息表时，periods 输出空数组 []。
 2. 图里只有作息表、没有课程时，courses 输出空数组 []。
 3. 作息表一行填一项。"第1-2节 08:00-09:40"就是 from:1,to:2,start:"08:00",end:"09:40"；"第1节 08:00-08:45"就是 from:1,to:1。
-4. 一行课就是一节课，不要把同一节课拆成多条。
+4. 一行课就是一节课：一个格子跨多节（合并单元格）也只输出一条，用 period_from / period_to 表示跨度，不要拆成重复的多条。
 5. 时间写全起止；只有开始时间就只写开始时间。
 6. 不要抽表头、"节次""星期"这类文字。
 7. courses 最多 40 条，periods 最多 20 条。
+8. teacher 是最容易漏的字段，务必逐格找：老师名常出现在科目名下面第二行、同一格的括号里（"计算机导论（李明）"）、单独一列"任课教师"、表格底部说明、或合并单元格里跟在科目后面的那一行。看到就填进 teacher，不要塞进 note。
+9. teacher 只填图上写的人名（原文写"王老师""李教授"就照抄）。确实没有就留空字符串，绝对不要根据科目去猜、不要凭空编一个名字。
+10. 作息时间表里的"第一、二节课 08:35-09:55""课间休息""午餐、午休""预备铃""宿舍关门"这些都是时间安排，不是课程，只能写进 periods，绝对不能当成 course 输出。
 
 只输出 JSON 对象。`;
+}
+
+/* 一格可能是斜杠分隔的一长串：「高等数学I/(3-3节)3-18周/本部 10-309/刘文斌/64/4.0」
+   按段拆：第1段课程名，带"节"的是节次，带"周"的是周次，纯数字是学时/学分，
+   带数字的是地点，2-4 个汉字的当老师名。拆不出来就返回 null，交给上层走原逻辑。 */
+function splitCellFields(text){
+  const raw = String(text || "").trim();
+  if(raw.indexOf("/") < 0 && raw.indexOf("／") < 0) return null;
+
+  const parts = raw.split(/[\/／]/).map(s => s.trim()).filter(Boolean);
+  if(parts.length < 3) return null;
+
+  const out = { title: parts[0], teacher: "", room: "", note: "", hours: 0, credit: 0, pf: 0, pt: 0 };
+  const nums = [];
+
+  parts.slice(1).forEach(p => {
+    let rest = p;
+
+    // 节次和周次常常粘在同一段里，例如 "(3-3节)3-18周"，先把节次抠出来
+    const rng = rest.match(/(\d{1,2})\s*[-—~至]\s*(\d{1,2})\s*节/);
+    if(rng){
+      out.pf = parseInt(rng[1], 10);
+      out.pt = parseInt(rng[2], 10);
+      rest = rest.replace(rng[0], "").replace(/^[（(\s]+/, "").replace(/[)）\s]+$/, "").trim();
+    }else{
+      const one = rest.match(/第?\s*(\d{1,2})\s*节/);
+      if(one){
+        out.pf = parseInt(one[1], 10);
+        out.pt = out.pf;
+        rest = rest.replace(one[0], "").replace(/^[（(\s]+/, "").replace(/[)）\s]+$/, "").trim();
+      }
+    }
+
+    if(/周/.test(rest)){
+      out.note = out.note ? out.note + " " + rest : rest;
+      return;
+    }
+    if(!rest) return;
+    if(/^\d+(\.\d+)?$/.test(rest)){
+      nums.push(parseFloat(rest));
+    }else if(/\d/.test(rest)){
+      out.room = out.room ? out.room + " " + rest : rest;
+    }else if(/^[\u4e00-\u9fa5·]{2,4}$/.test(rest)){
+      if(!out.teacher) out.teacher = rest;
+      else out.note = out.note ? out.note + " " + rest : rest;
+    }
+  });
+
+  if(nums.length >= 1) out.hours = Math.round(nums[0]);
+  if(nums.length >= 2) out.credit = nums[1];
+  return out;
+}
+
+/* 作息表里的行（"第一、二节课""课间休息""午餐、午休""预备铃""宿舍关门"）常被模型
+   当成课程吐出来，变成一堆没老师没教室的假课。这里统一挡掉。 */
+function isTimeBlockTitle(t){
+  const s = String(t || "").replace(/\s+/g, "");
+  if(!s) return true;
+  if(/^(第?[一二三四五六七八九十]{1,2}[、\-—~至]?[一二三四五六七八九十]{0,2}节课?)$/.test(s)) return true;
+  if(/^(课间休息|午休|午餐.*|晚餐.*|早操|课间操|休息|.*预备铃|.*宿舍.*|.*关门.*)$/.test(s)) return true;
+  return false;
 }
 
 /* 模型偶尔只吐数组（老格式），也可能吐 {courses,periods}。
@@ -1522,18 +1600,42 @@ function parseCourseJSON(text){
     const tm = parseCourseTime(rawTime);
     const wd = date != null ? new Date(date).getDay() : parseCourseWeekday(rawDate);
 
-    // 节次优先用正则从原文里抠，抠不到再用模型给的字段
+    // 一格可能是「课程名/(3-3节)3-18周/本部 10-309/刘文斌/64/4.0」这种斜杠写法，
+    // 模型有时整段塞进 title，这里本地再拆一次，保证老师/教室/学时被捞出来
+    const cell = splitCellFields(it.title);
+
+    // 节次优先用正则从原文里抠，抠不到再用模型给的字段，最后用斜杠段里解析到的
     let pf = tm.pf, pt = tm.pt;
     const mf = parseInt(it.period_from, 10) || 0;
     const mt = parseInt(it.period_to, 10) || 0;
     if(!pf && mf > 0){ pf = mf; pt = mt > 0 ? mt : mf; }
+    if(!pf && cell && cell.pf){ pf = cell.pf; pt = cell.pt; }
     if(!pt) pt = pf;
     if(pf && pt < pf) pt = pf;
 
+    // 老版本模型会把老师塞进 note（"任课老师：王建国"），能从 note 里捞就先捞出来
+    let teacher = String(it.teacher || it.teacher_name || "").trim();
+    let note = String(it.note || "").trim();
+    if(!teacher && note){
+      const mt2 = note.match(/(?:任课老师|授课教师|指导教师|教师|老师)\s*[:：]?\s*([\u4e00-\u9fa5A-Za-z·]{2,8})/);
+      if(mt2){
+        teacher = mt2[1].trim();
+        note = note.replace(mt2[0], "").replace(/^[，,、;；\s]+/, "").trim();
+      }
+    }
+    if(!teacher && cell) teacher = cell.teacher;
+    if(!note && cell && cell.note) note = cell.note;
+
+    const hours = parseInt(it.hours, 10) || (cell ? cell.hours : 0) || 0;
+    const credit = parseFloat(it.credit) || (cell ? cell.credit : 0) || 0;
+
     return {
-      title: String(it.title || "").trim() || "未命名课程",
-      room: String(it.room || "").trim(),
-      note: String(it.note || "").trim(),
+      title: (cell ? cell.title : String(it.title || "").trim()) || "未命名课程",
+      teacher: teacher,
+      room: String(it.room || "").trim() || (cell ? cell.room : ""),
+      note: note,
+      hours: hours,
+      credit: credit,
       date: date,
       weekday: wd == null ? new Date().getDay() : wd,
       start: tm.start,
@@ -1545,7 +1647,7 @@ function parseCourseJSON(text){
       rawDate: rawDate,
       rawTime: rawTime
     };
-  });
+  }).filter(c => !isTimeBlockTitle(c.title));
 
   const periods = rawPeriods.slice(0, 20).map(p => {
     p = p || {};
@@ -1571,6 +1673,83 @@ async function qwenRecognizeCourse(dataUrl){
     temperature: 0.1
   };
   return parseCourseJSON(await qwenVision(body));
+}
+
+/* ---- 老师补认 ----
+   老师是最容易丢的字段：模型第一遍常把它当备注省略掉。所以第一遍认完
+   只要还有课缺老师，就带着原图再问一次，这次只让它补老师、按序号对齐。
+   补不回来的一律留空，绝不让模型编名字——宁可显示「老师待补」。
+*/
+function teacherPrompt(list){
+  const rows = list.map((c, i) => {
+    const bits = [c.title];
+    if(c.rawTime) bits.push(c.rawTime);
+    if(c.weekday != null) bits.push("周" + WD_CN[c.weekday]);
+    if(c.room) bits.push(c.room);
+    return `${i + 1}. ${bits.join("，")}`;
+  }).join("\n");
+
+  return `这次只做一件事：从图里读出下面这些课的任课老师。
+
+${rows}
+
+输出严格 JSON 数组，每项 {"index": 序号（从 1 开始，对应上面的编号）, "teacher": "姓名"}。
+- teacher 照图上原文写，例如"王建国""李老师"；不要加"任课教师："这类前缀。
+- 图上确实没有这门课的老师名字，teacher 填空字符串 ""。
+- 不许根据科目去猜、不许编名字、不许写"未知""未标注"这类占位。
+只输出 JSON 数组，不要解释、不要 markdown 代码块。`;
+}
+
+function parseTeacherJSON(text){
+  const s = String(text || "").trim()
+    .replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+  const a = s.indexOf("["), b = s.lastIndexOf("]");
+  if(a < 0 || b <= a) return [];
+  try{
+    const v = JSON.parse(s.slice(a, b + 1));
+    return Array.isArray(v) ? v : [];
+  }catch(e){ return []; }
+}
+
+/* 把缺老师的课逐张图问一遍，返回补上的条数。失败不抛错，留空给用户看 */
+async function supplementTeachers(courses, dataUrls){
+  const idx = [];
+  (courses || []).forEach((c, i) => { if(c && !c.teacher) idx.push(i); });
+  if(!idx.length || !dataUrls || !dataUrls.length) return 0;
+
+  const list = idx.map(i => courses[i]);
+  let filled = 0;
+
+  for(const url of dataUrls){
+    if(!idx.some(i => !courses[i].teacher)) break;   // 都补齐了就别再花一次调用
+    let arr = [];
+    try{
+      const body = {
+        model: QWEN.model,
+        messages: [{
+          role: "user",
+          content: [
+            { type: "image_url", image_url: { url: url } },
+            { type: "text", text: teacherPrompt(list) }
+          ]
+        }],
+        max_tokens: 800,
+        temperature: 0
+      };
+      arr = parseTeacherJSON(await qwenVision(body));
+    }catch(e){
+      continue;   // 补认失败不影响主流程
+    }
+    arr.forEach(it => {
+      const p = parseInt(it && it.index, 10);
+      const t = String((it && it.teacher) || "").trim();
+      if(!(p >= 1) || p > list.length || !t) return;
+      if(/^(未知|未标注|不详|无|n\/a)$/i.test(t)) return;   // 占位词不算认出来
+      const c = courses[idx[p - 1]];
+      if(c && !c.teacher){ c.teacher = t; filled++; }
+    });
+  }
+  return filled;
 }
 
 /* 图片压缩：拍照原图动辄几 MB，先缩到能接受的大小 */
@@ -1614,7 +1793,9 @@ function nearest(){
 }
 
 /* ================= 课表 =================
-   一条课：{ id, title, date, weekday, start, end, room, note, pf, pt }
+   一条课：{ id, title, teacher, date, weekday, start, end, room, note, hours, credit, pf, pt }
+   - teacher 是独立字段，不是 note 的一部分；识别不到就留空，界面上显示「老师待补」
+   - hours / credit 是总学时和学分，图里写了就存，没写就是 0
    - weekday 0-6（0 是周日），一定有，用来排周表
    - date 只在图里写了具体日期（11月16日 / 2026-11-16）时才存，
      只写“周一”的按每周重复处理，这样课表不会过期
@@ -1899,7 +2080,7 @@ function courseCardHTML(){
       <div class="cls-v"></div>
       <div class="cls-m">
         <b>${escapeHTML(c.title)}</b>
-        <span>${c.room ? escapeHTML(c.room) : "教室待补"}</span>
+        <span>${escapeHTML([c.teacher, c.room].filter(Boolean).join(" · ") || "老师 / 教室待补")}</span>
       </div>
     </div>`;
   }).join("");
@@ -2614,16 +2795,19 @@ function renderCourseSheet(){
     const head = parts.length ? parts.join(" · ") + "。" : "";
 
     $("#cTitle").textContent = `认到 ${csDraft.length} 节课`;
+    const noT = csDraft.filter(c => !c.teacher).length;
     $("#cDesc").textContent = csBusy
       ? (csProg || "继续认…")
-      : head + "确认没问题就存进课表；认错的点右边 × 去掉。";
+      : head + (noT
+          ? `有 ${noT} 节课没认出老师（标橙了），能补的调大图再加一张，补不到就留「老师待补」。`
+          : "确认没问题就存进课表；认错的点右边 × 去掉。");
 
     body.innerHTML = csDraft.map((c, i) => {
       const ct = courseTime(c);
-      const meta = ["周" + WD_CN[c.weekday], c.room || "教室待补"];
+      const meta = ["周" + WD_CN[c.weekday], c.teacher || "老师待补", c.room || "教室待补"];
       // 只有“11月16日”这种具体日期才额外显示，别把“周一”重复一遍
       if(/\d/.test(c.rawDate || "")) meta.push(c.rawDate);
-      return `<div class="cs-it">
+      return `<div class="cs-it${c.teacher ? "" : " cs-it-warn"}">
         <div class="cs-time"><b>${ct.a}</b><span>${ct.b}</span></div>
         <div class="cs-main"><b>${escapeHTML(c.title)}</b><span>${escapeHTML(meta.join(" · "))}</span></div>
         <button class="cs-del" data-cdrop="${i}" aria-label="去掉">×</button>
@@ -2658,7 +2842,8 @@ function renderCourseSheet(){
         <div class="cs-day-h">周${WD_CN[wd]}${wd === today ? "<em>今天</em>" : ""}<span>${list.length} 节</span></div>
         ${list.map(c => {
           const ct = courseTime(c);
-          const meta = [c.room || "教室待补"];
+          const meta = [c.teacher || "老师待补", c.room || "教室待补"];
+          if(c.hours) meta.push(c.hours + "学时");
           if(c.date) meta.push(mdText(c.date));
           if(c.note) meta.push(c.note);
           return `<div class="cs-it">
@@ -2697,9 +2882,9 @@ function saveCourses(){
       (x.start || "") === (c.start || "") && (x.room || "") === (c.room || ""));
     if(same){ dup++; return; }
     db.courses.push({
-      id: uid(), title: c.title, weekday: c.weekday, date: c.date || null,
+      id: uid(), title: c.title, teacher: c.teacher || "", weekday: c.weekday, date: c.date || null,
       start: c.start || "", end: c.end || "", room: c.room || "", note: c.note || "",
-      pf: c.pf || 0, pt: c.pt || 0
+      hours: c.hours || 0, credit: c.credit || 0, pf: c.pf || 0, pt: c.pt || 0
     });
     added++;
   });
@@ -2739,6 +2924,13 @@ async function importCourseImages(files){
     }catch(err){
       errs.push((err && err.message) || `第 ${begin + i + 1} 张没认出来`);
     }
+  }
+
+  // 缺老师的再补认一轮：带着原图只问老师，补不回来就留空，不编
+  if(csDraft && csDraft.some(c => !c.teacher)){
+    csProg = "有课没认到老师，正在对着图再认一遍…";
+    renderCourseSheet();
+    await supplementTeachers(csDraft, imgs);
   }
 
   csBusy = false; csProg = "";
