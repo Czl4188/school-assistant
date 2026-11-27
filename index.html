@@ -1530,48 +1530,32 @@ function coursePrompt(){
   const today = `${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())}`;
   return `你是课表信息抽取助手。今天是 ${today}（周${wl[t.getDay()]}）。
 
-这张图可能是「课程表」，也可能是「作息时间表」，也可能两者都有。请判断后抽取，只输出严格 JSON 对象，不要解释、不要 markdown 代码块。
+图里可能有两类东西：「课程表」和「作息时间表」。先判断是哪类，再抽取。
+只输出严格 JSON 对象，不要解释、不要 markdown 代码块。
 
 输出结构：
 {"courses":[…],"periods":[…]}
 
-courses 每一项：
-- title：科目名称，照原文写，例如"高等数学""大学物理实验"
-- raw_date：图中原文的日期表述，例如"11月16日""2026-11-16""周一"；没有就填空字符串
-- raw_time：图中原文的时间表述，例如"8:00-9:40""第1-2节"；没有就填空字符串
-- period_from：起始节次，整数。像"第1-2节"就填 1；没有就用 0
-- period_to：结束节次，整数。"第1-2节"填 2；单节就和 period_from 相同；没有就用 0
-- room：上课地点，要带楼号和房间号，例如"3号楼402""三教 205"；没有就填空字符串
-- teacher：任课老师姓名，**能看见就必须填**，例如"王建国""李老师"。只填姓名，不要加"任课教师："这类前缀；没有就填空字符串
-- hours：总学时，整数，图里写了就填（例如"48"），没有就用 0
-- credit：学分，数字，图里写了就填（例如 3.0），没有就用 0
-- note：其它补充，例如单双周、上课周次；没有就填空字符串
+courses 每一项只有 4 个字段：
+- title：课程名称，照原文写。只写课程名，不要把节次、周次、教室、老师拼进去
+- weekday：星期几，统一写成「周一」「周二」…「周日」。表头是「星期一」就归一成「周一」
+- time：这门课的时间，照原文抄。有具体时刻就抄（"08:00-09:40"）；只有节次就抄节次
+（"第1-2节"）；两样都有就都写（"第1-2节 08:00-09:40"）
+- teacher：任课老师姓名，只填姓名。图上没写就填空字符串 ""
 
-很多学校的课表一格是斜杠分隔的，例如：
-「高等数学I/(3-3节)3-18周/本部 10-309/刘文斌/64/4.0」
-这种要按顺序拆开，不要整段塞进 title：
-  第1段 → title       第2段 → 节次（填 period_from / period_to）
-  第3段 → 周次（写进 note，例如"3-18周"）  第4段 → room（"本部 10-309"要保留校区和教室号）
-  第5段 → teacher     第6段 → hours     第7段 → credit
-看到几段就拆几段，段数不足时按顺序贪心匹配，别把教师名丢掉。
-
-periods 每一项（作息表里的「第几节 → 几点」对照）：
-- from：起始节次，整数
-- to：结束节次，整数；单节就填同一个数
-- start：这一段的开始时刻，24 小时制"08:00"
-- end：这一段的结束时刻，24 小时制"09:40"
+periods 每一项（只在作息时间表里）：from / to / start / end，例：
+"第1-2节 08:00-09:40" → from:1,to:2,start:"08:00",end:"09:40"
 
 规则：
-1. 图里只有课程、没有作息表时，periods 输出空数组 []。
-2. 图里只有作息表、没有课程时，courses 输出空数组 []。
-3. 作息表一行填一项。"第1-2节 08:00-09:40"就是 from:1,to:2,start:"08:00",end:"09:40"；"第1节 08:00-08:45"就是 from:1,to:1。
-4. 一行课就是一节课：一个格子跨多节（合并单元格）也只输出一条，用 period_from / period_to 表示跨度，不要拆成重复的多条。
-5. 时间写全起止；只有开始时间就只写开始时间。
-6. 不要抽表头、"节次""星期"这类文字。
+1. 一格 = 一节课。合并单元格也只输出一条，不要拆成重复多条。
+2. 斜杠长串「高等数学I/(3-3节)3-18周/本部 10-309/刘文斌」只取第一段当 title，
+老师那段填 teacher；教室、周次、学时一律丢掉，不要写进任何字段。
+3. teacher 只抄图上真实出现的姓名。看不到就留空，不许猜、不许编、不许写"未知"。
+4. 这些不是课程：第一、二节课 / 课间休息 / 午餐、午休 / 预备铃 / 早操 / 宿舍关门 /
+备注，以及"节次""星期""课程"这类表头。它们只能进 periods。
+5. 只有课程表 → periods 输出 []；只有作息表 → courses 输出 []。
+6. 认不准的格子直接跳过。宁可少一条，不要造一条。
 7. courses 最多 40 条，periods 最多 20 条。
-8. teacher 是最容易漏的字段，务必逐格找：老师名常出现在科目名下面第二行、同一格的括号里（"计算机导论（李明）"）、单独一列"任课教师"、表格底部说明、或合并单元格里跟在科目后面的那一行。看到就填进 teacher，不要塞进 note。
-9. teacher 只填图上写的人名（原文写"王老师""李教授"就照抄）。确实没有就留空字符串，绝对不要根据科目去猜、不要凭空编一个名字。
-10. 作息时间表里的"第一、二节课 08:35-09:55""课间休息""午餐、午休""预备铃""宿舍关门"这些都是时间安排，不是课程，只能写进 periods，绝对不能当成 course 输出。
 
 只输出 JSON 对象。`;
 }
@@ -1673,8 +1657,9 @@ function parseCourseJSON(text){
 
   const courses = rawCourses.slice(0, 40).map(it => {
     it = it || {};
-    const rawDate = String(it.raw_date || "").trim();
-    const rawTime = String(it.raw_time || "").trim();
+    // 新契约用 weekday / time，老格式是 raw_date / raw_time，两种都认
+    const rawDate = String(it.weekday || it.raw_date || "").trim();
+    const rawTime = String(it.time || it.raw_time || "").trim();
     const date = parseCourseDate(rawDate);
     const tm = parseCourseTime(rawTime);
     const wd = date != null ? new Date(date).getDay() : parseCourseWeekday(rawDate);
@@ -1703,20 +1688,21 @@ function parseCourseJSON(text){
       }
     }
     if(!teacher && cell) teacher = cell.teacher;
-    if(!note && cell && cell.note) note = cell.note;
+    // 新契约只要 title / weekday / time / teacher：教室、周次、学时一律不写进任何字段，
+    // 所以这里不再从斜杠串兜底填 note / room / hours / credit
 
-    const hours = parseInt(it.hours, 10) || (cell ? cell.hours : 0) || 0;
-    const credit = parseFloat(it.credit) || (cell ? cell.credit : 0) || 0;
+    const hours = parseInt(it.hours, 10) || 0;
+    const credit = parseFloat(it.credit) || 0;
 
     return {
       title: (cell ? cell.title : String(it.title || "").trim()) || "未命名课程",
       teacher: teacher,
-      room: String(it.room || "").trim() || (cell ? cell.room : ""),
+      room: String(it.room || "").trim(),
       note: note,
       hours: hours,
       credit: credit,
       date: date,
-      weekday: wd == null ? new Date().getDay() : wd,
+      weekday: wd,
       start: tm.start,
       end: tm.end,
       fixS: !!tm.start,
@@ -1726,7 +1712,8 @@ function parseCourseJSON(text){
       rawDate: rawDate,
       rawTime: rawTime
     };
-  }).filter(c => !isTimeBlockTitle(c.title));
+  // 认不出星期几的条目直接丢掉：宁可少一条，也不要静默塞到「今天」害用户看错
+  }).filter(c => !isTimeBlockTitle(c.title) && c.weekday != null);
 
   const periods = rawPeriods.slice(0, 20).map(p => {
     p = p || {};
@@ -2002,7 +1989,20 @@ function parseCourseTime(raw){
   if(m){
     const a = hm(m[2], m[3], m[1]);
     const b = hm(m[5], m[6], m[4] || m[1]);
-    if(a && b) return { start:a, end:b, pf:0, pt:0 };
+    if(a && b){
+      // 可能同时写着节次（"第7-8节 14:10-15:30"），两样都要留下，不能只取时刻
+      const pr = s.match(/(?:第)?\s*(\d{1,2})\s*[-–—~～至到]\s*(\d{1,2})\s*节/);
+      const po = pr ? null : s.match(/第\s*(\d{1,2})\s*节/);
+      let pf = 0, pt = 0;
+      if(pr){
+        pf = +pr[1]; pt = +pr[2];
+        if(!(pf > 0 && pf <= 12 && pt >= pf && pt <= 12)) pf = pt = 0;
+      }else if(po){
+        pf = pt = +po[1];
+        if(!(pf > 0 && pf <= 12)) pf = pt = 0;
+      }
+      return { start:a, end:b, pf:pf, pt:pt };
+    }
   }
 
   // 第1-2节 / 1-2节 —— 只记节次，时刻等作息表来换算
@@ -2159,7 +2159,7 @@ function courseCardHTML(){
       <div class="cls-v"></div>
       <div class="cls-m">
         <b>${escapeHTML(c.title)}</b>
-        <span>${escapeHTML([c.teacher, c.room].filter(Boolean).join(" · ") || "老师 / 教室待补")}</span>
+        <span>${escapeHTML([c.teacher, c.room].filter(Boolean).join(" · ") || "老师待补")}</span>
       </div>
     </div>`;
   }).join("");
@@ -2883,7 +2883,9 @@ function renderCourseSheet(){
 
     body.innerHTML = csDraft.map((c, i) => {
       const ct = courseTime(c);
-      const meta = ["周" + WD_CN[c.weekday], c.teacher || "老师待补", c.room || "教室待补"];
+      // 教室不是必填字段了，有才显示，别每行都挂个「教室待补」
+      const meta = ["周" + WD_CN[c.weekday], c.teacher || "老师待补"];
+      if(c.room) meta.push(c.room);
       // 只有“11月16日”这种具体日期才额外显示，别把“周一”重复一遍
       if(/\d/.test(c.rawDate || "")) meta.push(c.rawDate);
       return `<div class="cs-it${c.teacher ? "" : " cs-it-warn"}">
@@ -2921,7 +2923,8 @@ function renderCourseSheet(){
         <div class="cs-day-h">周${WD_CN[wd]}${wd === today ? "<em>今天</em>" : ""}<span>${list.length} 节</span></div>
         ${list.map(c => {
           const ct = courseTime(c);
-          const meta = [c.teacher || "老师待补", c.room || "教室待补"];
+          const meta = [c.teacher || "老师待补"];
+          if(c.room) meta.push(c.room);
           if(c.hours) meta.push(c.hours + "学时");
           if(c.date) meta.push(mdText(c.date));
           if(c.note) meta.push(c.note);
