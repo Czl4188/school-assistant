@@ -459,6 +459,13 @@ html[data-theme="aurora"] .app::after{content:none}
 [data-theme="aurora"] .tv-verdict.warn{background:rgba(255,255,255,.05);border:1px dashed rgba(255,255,255,.25)}
 [data-theme="aurora"] .tv-verdict.warn .tv-vt{color:rgba(255,255,255,.6)}
 
+/* ================= 编辑页时间预览 ================= */
+.rd-row{display:flex;align-items:center;gap:8px;margin:-2px 2px 12px;font-size:12px;font-weight:750;opacity:.75;cursor:pointer}
+.rd-row input{width:16px;height:16px;flex:none;accent-color:#FF7A59}
+[data-theme="aurora"] .rd-row input{accent-color:#22d3ee}
+.rd-prev{font-size:12px;font-weight:800;opacity:.6;margin:0 2px 16px;letter-spacing:-.01em}
+.rd-prev::before{content:"预览：";font-weight:750;opacity:.75}
+
 /* ================= 输入区 ================= */
 .composer{
   position:relative;z-index:6;flex:none;
@@ -1024,13 +1031,19 @@ html[data-theme="aurora"] .app::after{content:none}
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.4 2.4l7.2 7.2M9.6 2.4L2.4 9.6"/></svg>
     </button>
     <h3>改这一件事</h3>
-    <p class="desc">时间留空就是「待补」，之后想起来再填。</p>
+    <p class="desc">结束时间留空就只记开始时间；两个都留空显示「未设置时间」。</p>
 
     <div class="sec-title2">事项</div>
     <div class="pair"><input class="field" id="rTitle" maxlength="30" placeholder="事项名称"></div>
 
-    <div class="sec-title2">截止时间</div>
-    <div class="pair"><input class="field" id="rDue" type="datetime-local"></div>
+    <div class="sec-title2">开始时间</div>
+    <div class="pair"><input class="field" id="rStart" type="datetime-local"></div>
+
+    <div class="sec-title2">结束时间（可留空）</div>
+    <div class="pair"><input class="field" id="rEnd" type="datetime-local"></div>
+
+    <label class="rd-row"><input type="checkbox" id="rAllDay">全天事项（只记日期）</label>
+    <div class="rd-prev" id="rPreview">未设置时间</div>
 
     <div class="sec-title2">类型</div>
     <div class="kinds" id="rKinds"></div>
@@ -1145,6 +1158,38 @@ function fmtDue(ts){
   const d = new Date(ts);
   return `${d.getMonth()+1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
+
+/* ---- 结构化时间 ----
+   记录上的时间以 startAt / endAt / allDay 为准，due 只是给排序和分组用的派生值。
+   startAt / endAt 都是本地时间字符串，形如 2026-11-30T08:30（不带时区）。 */
+function toLocalISO(ts){
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function fromLocalISO(s){
+  const m = String(s || "").match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if(!m) return null;
+  const d = new Date(+m[1], +m[2]-1, +m[3], +m[4], +m[5], 0, 0);
+  return isNaN(d.getTime()) ? null : d;
+}
+/* 时间段正则：08:30-11:30 / 8:30到11:30 / 8:30~11:30 / 上午8点半到11点半 / 下午2点到4点 / 23:00-次日01:00
+   放在这里是因为迁移函数在初始化阶段就要用它，不能等到 parseText 附近才声明。 */
+const RANGE_RE = /(上午|早上|早晨|中午|下午|晚上|傍晚|凌晨)?\s*(\d{1,2}|[零一二两三四五六七八九十]{1,3})\s*[:：点时]\s*(\d{1,2})?\s*分?\s*(半)?\s*[-–—~～到至]\s*(次日|第二天|隔天)?\s*(上午|早上|早晨|中午|下午|晚上|傍晚|凌晨)?\s*(\d{1,2}|[零一二两三四五六七八九十]{1,3})\s*[:：点时]\s*(\d{1,2})?\s*分?\s*(半)?/;
+
+/* 全应用唯一的时间展示函数：聊天回执、列表卡片、详情/编辑预览都调它 */
+function formatTimeRange(item){
+  if(!item) return "未设置时间";
+  const s = fromLocalISO(item.startAt);
+  if(!s) return "未设置时间";
+  const day = `${s.getMonth()+1}月${s.getDate()}日`;
+  if(item.allDay) return day;
+  const st = `${pad(s.getHours())}:${pad(s.getMinutes())}`;
+  const e = fromLocalISO(item.endAt);
+  if(!e) return `${day} ${st}`;
+  const et = `${pad(e.getHours())}:${pad(e.getMinutes())}`;
+  const sameDay = e.getFullYear() === s.getFullYear() && e.getMonth() === s.getMonth() && e.getDate() === s.getDate();
+  return sameDay ? `${day} ${st}–${et}` : `${day} ${st}–${e.getMonth()+1}/${e.getDate()} ${et}`;
+}
 function dueLabel(ts){
   if(!ts) return {text:"待补时间", soon:false};
   const n = dayDiff(ts);
@@ -1169,10 +1214,7 @@ function toast(msg){
   clearTimeout(t._tm);
   t._tm = setTimeout(()=>t.classList.remove("on"), 1900);
 }
-function toLocalInput(ts){
-  const d = new Date(ts || Date.now());
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
+
 
 /* ================= 头像 ================= */
 const AVA_COLORS = [
@@ -1220,6 +1262,60 @@ function cnHour(str){
   return CN_NUM[str] !== undefined ? CN_NUM[str] : null;
 }
 
+/* ---- 时间段识别 ----
+   支持 08:30-11:30 / 8:30到11:30 / 8:30~11:30 / 上午8点半到11点半 / 下午2点到4点 / 23:00-次日01:00 */
+
+function hmParts(hStr, mStr, period, half){
+  let h = cnHour(String(hStr == null ? "" : hStr));
+  if(h === null || h === undefined) return null;
+  let mi = (mStr != null && mStr !== "") ? parseInt(mStr, 10) : (half ? 30 : 0);
+  if(!(mi >= 0 && mi <= 59)) mi = 0;
+  if((period === "下午" || period === "晚上" || period === "傍晚") && h < 12) h += 12;
+  if(period === "中午" && h < 11) h += 12;
+  if(period === "凌晨" && h === 12) h = 0;
+  if(!(h >= 0 && h <= 23)) return null;
+  return { h: h, m: mi };
+}
+
+/* 从原文里取时段结束时刻，落到 startAt 的同一天（跨天则次日） */
+function findRangeEnd(text, startAtISO){
+  const s = fromLocalISO(startAtISO);
+  if(!s) return null;
+  const m = String(" " + (text || "") + " ").match(RANGE_RE);
+  if(!m) return null;
+  const eh = hmParts(m[7], m[8], m[6] || m[1], !!m[9]);
+  if(!eh) return null;
+  const e = new Date(s);
+  e.setHours(eh.h, eh.m, 0, 0);
+  if(m[5] || e.getTime() <= s.getTime()) e.setDate(e.getDate() + 1);
+  return toLocalISO(e.getTime());
+}
+
+/* 由 parseText 已有的日期/时刻结果，装配成结构化时间 */
+function buildWhen(raw, hasDate, hasTime, due){
+  const out = { startAt: null, endAt: null, allDay: false };
+  if(!hasDate || !due) return out;
+  const d = new Date(due);
+  if(!hasTime){
+    out.allDay = true;
+    out.startAt = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T00:00`;
+    return out;
+  }
+  out.startAt = toLocalISO(due);
+  const m = String(" " + (raw || "") + " ").match(RANGE_RE);
+  if(m){
+    const eh = hmParts(m[7], m[8], m[6] || m[1], !!m[9]);
+    if(eh){
+      const e = new Date(d);
+      e.setHours(eh.h, eh.m, 0, 0);
+      // 明确写了"次日"或结束早于开始，都算跨到第二天
+      if(m[5] || e.getTime() <= d.getTime()) e.setDate(e.getDate() + 1);
+      out.endAt = toLocalISO(e.getTime());
+    }
+  }
+  return out;
+}
+
 function parseText(raw){
   const now = new Date();
   let s = " " + raw + " ";
@@ -1227,11 +1323,11 @@ function parseText(raw){
   const cut = [];
 
   // ---- 时间 ----
-  const tRe = /(上午|早上|早晨|中午|下午|晚上|傍晚|凌晨)?\s*(\d{1,2}|[零一二两三四五六七八九十]{1,3})\s*(?:[:：点时])\s*(\d{1,2})?\s*分?/;
+  const tRe = /(上午|早上|早晨|中午|下午|晚上|傍晚|凌晨)?\s*(\d{1,2}|[零一二两三四五六七八九十]{1,3})\s*(?:[:：点时])\s*(\d{1,2})?\s*分?\s*(半)?/;
   const tm = s.match(tRe);
   if(tm){
     let h = cnHour(tm[2]);
-    const mi = tm[3] ? parseInt(tm[3],10) : 0;
+    const mi = tm[3] ? parseInt(tm[3],10) : (tm[4] ? 30 : 0);   // "8点半" → 30 分
     const p = tm[1] || "";
     if(h !== null){
       if((p==="下午"||p==="晚上"||p==="傍晚") && h < 12) h += 12;
@@ -1241,6 +1337,15 @@ function parseText(raw){
         hour = h; min = mi; hasTime = true;
         cut.push(tm[0]);
       }
+    }
+  }
+  // 时间段要整段从标题里切掉，否则会残留 "-11:30"
+  if(hasTime && tm){
+    const rm = s.match(RANGE_RE);
+    if(rm){
+      const at = cut.indexOf(tm[0]);
+      if(at >= 0) cut.splice(at, 1);
+      cut.push(rm[0]);
     }
   }
 
@@ -1326,7 +1431,11 @@ function parseText(raw){
     d.setHours(hour, min, 0, 0);
     due = d.getTime();
   }
-  return { title: title || "未命名事项", due, kind, hasTime, hasDate };
+  const when = buildWhen(raw, hasDate, hasTime, due);
+  return {
+    title: title || "未命名事项", due, kind, hasTime, hasDate,
+    startAt: when.startAt, endAt: when.endAt, allDay: when.allDay
+  };
 }
 
 /* ================= 千问视觉识别 =================
@@ -1461,19 +1570,22 @@ function parseVisionJSON(text){
       kind = (pk && pk !== "其他") ? pk : "其他";
     }
 
+    const startAt = due ? toLocalISO(due) : null;
+    const endAt = startAt ? findRangeEnd(raw, startAt) : null;
+    const allDay = false;
+
     let dueText;
     if(state === "none"){
       dueText = "无规定时间";
     }else if(state === "unclear"){
       dueText = "(时间没认准，可手动改)";
-    }else if(due){
-      const end = endFromRaw(raw);
-      dueText = fmtDue(due) + (end ? "–" + end : "");
+    }else if(startAt){
+      dueText = formatTimeRange({ startAt: startAt, endAt: endAt, allDay: allDay });
     }else{
       dueText = raw ? `${raw}（时间没认准，可手动改）` : "(时间没认准，可手动改)";
     }
 
-    return { title, due, kind, note, raw, formRaw, dueText, state };
+    return { title, due, kind, note, raw, formRaw, dueText, state, startAt, endAt, allDay };
   });
 }
 
@@ -1858,9 +1970,40 @@ function compressImage(file, maxSide, quality){
 /* ================= 记录 ================= */
 const ICONS = { "作业":"作", "竞赛":"赛", "考试":"考", "活动":"活", "其他":"记" };
 function addRecord(p){
-  const r = { id:uid(), title:p.title, due:p.due, kind:p.kind || "其他", note:p.note||"", done:false, createdAt:Date.now() };
+  const startAt = p.startAt || null;
+  const sd = startAt ? fromLocalISO(startAt) : null;
+  const r = {
+    id: uid(), title: p.title,
+    startAt: startAt, endAt: p.endAt || null, allDay: !!p.allDay,
+    due: sd ? sd.getTime() : null,          // 派生值，只给排序/分组用
+    kind: p.kind || "其他", note: p.note || "",
+    done: false, createdAt: Date.now()
+  };
   db.records.push(r); save();
   return r;
+}
+
+/* 老记录没有 startAt：从 due 反推，并尝试从标题/备注里补回 endAt。
+   匹配不到就留 null，不报错、不阻塞。 */
+function migrateRecords(){
+  let changed = false;
+  (db.records || []).forEach(r => {
+    if(!("startAt" in r)){
+      if(r.due){ r.startAt = toLocalISO(r.due); r.endAt = null; r.allDay = false; }
+      else { r.startAt = null; r.endAt = null; r.allDay = false; }
+      changed = true;
+    }
+    if(r.endAt === undefined){ r.endAt = null; changed = true; }
+    if(r.allDay === undefined){ r.allDay = false; changed = true; }
+    if(r.startAt && !r.endAt && !r.allDay){
+      const e = findRangeEnd((r.title || "") + " " + (r.note || ""), r.startAt);
+      if(e){ r.endAt = e; changed = true; }
+    }
+    const sd = r.startAt ? fromLocalISO(r.startAt) : null;
+    const nd = sd ? sd.getTime() : null;
+    if(r.due !== nd){ r.due = nd; changed = true; }
+  });
+  if(changed) save();
 }
 function upcoming(){
   return db.records.filter(r => !r.done)
@@ -2075,7 +2218,7 @@ function renderHome(){
       <div class="hero-main">
         <div>
           <h2>${escapeHTML(n.title)}</h2>
-          <div class="sub">${fmtDue(n.due)}${n.kind ? " · " + n.kind : ""}</div>
+          <div class="sub">${formatTimeRange(n)}${n.kind ? " · " + n.kind : ""}</div>
         </div>
         <div class="hero-big ${dd === null ? 'sm' : ''}"><b>${bigN}</b><span>${bigU}</span></div>
       </div>
@@ -2125,9 +2268,12 @@ function renderHome(){
       <div class="wb-items">
         ${items.slice(0,3).map(r => {
           const dt = new Date(r.due);
+          const et = r.endAt ? fromLocalISO(r.endAt) : null;
+          const tm = r.allDay ? "全天"
+            : `${pad(dt.getHours())}:${pad(dt.getMinutes())}${et ? "–" + pad(et.getHours()) + ":" + pad(et.getMinutes()) : ""}`;
           return `<div class="wb-it" data-open="${r.id}">
             <span class="wb-t">${escapeHTML(r.title)}</span>
-            <span class="wb-m">${pad(dt.getHours())}:${pad(dt.getMinutes())}${r.kind !== "其他" ? " · " + r.kind : ""}</span>
+            <span class="wb-m">${tm}${r.kind !== "其他" ? " · " + r.kind : ""}</span>
           </div>`;
         }).join("")}
         ${items.length > 3 ? `<div class="wb-more">+${items.length - 3}</div>` : ""}
@@ -2143,7 +2289,7 @@ function itemHTML(r){
     <div class="item-ic">${ICONS[r.kind]||"记"}</div>
     <div class="item-t">
       <b>${escapeHTML(r.title)}</b>
-      <span>${fmtDue(r.due)}${r.note ? " · " + escapeHTML(r.note).slice(0,14) : ""}</span>
+      <span>${formatTimeRange(r)}${r.note ? " · " + escapeHTML(r.note).slice(0,14) : ""}</span>
     </div>
     <span class="item-d ${dl.soon?'soon':''}">${dl.text}</span>
   </div>`;
@@ -2230,7 +2376,7 @@ function renderNote(){
           <div class="check" data-toggle="${r.id}"></div>
           <div class="note-t">
             <b>${escapeHTML(r.title)}</b>
-            <p>${r.due ? fmtDue(r.due) : "还没定时间"}${r.note ? " · " + escapeHTML(r.note) : ""}</p>
+            <p>${formatTimeRange(r)}${r.note ? " · " + escapeHTML(r.note) : ""}</p>
           </div>
           <div class="note-r">
             <span class="note-d">${r.done ? "已完成" : dueLabel(r.due).text}</span>
@@ -2352,7 +2498,7 @@ function replyLocal(text){
     if(!u.length) return `记事本现在是空的，${call}。`;
     return `记事本里有 ${u.length} 项待办：\n` + u.slice(0,6).map((r,i)=>{
       const d = dueLabel(r.due);
-      return `${i+1}. ${r.title} — ${fmtDue(r.due)}（${d.text}）`;
+      return `${i+1}. ${r.title} — ${formatTimeRange(r)}（${d.text}）`;
     }).join("\n") + (u.length>6 ? `\n…还有 ${u.length-6} 项，去记事本看。` : "");
   }
 
@@ -2362,13 +2508,13 @@ function replyLocal(text){
       pool = pool.filter(r => r.due && dayDiff(r.due) <= 7);
       if(!pool.length) return `这周没有要交的东西，${call}可以松口气。`;
       return `${call}，这周有 ${pool.length} 件事：\n` + pool.map((r,i)=>{
-        return `${i+1}. ${r.title} — ${fmtDue(r.due)}（${dueLabel(r.due).text}）`;
+        return `${i+1}. ${r.title} — ${formatTimeRange(r)}（${dueLabel(r.due).text}）`;
       }).join("\n");
     }
     if(!pool.length) return `目前没有待办，${call}。有新通知丢给我就行。`;
     const top = pool[0], d = dueLabel(top.due);
     const rest = pool.slice(1,4);
-    let out = `${call}，最近的是「${top.title}」，${fmtDue(top.due)} 截止（${d.text}）。`;
+    let out = `${call}，最近的是「${top.title}」，${formatTimeRange(top)}（${d.text}）。`;
     if(rest.length) out += `\n后面还有：\n` + rest.map(r=>`· ${r.title} — ${dueLabel(r.due).text}`).join("\n");
     return out;
   }
@@ -2400,7 +2546,7 @@ function replyLocal(text){
     : dl.text.indexOf("逾期") === 0 ? dl.text
     : `还有 ${dl.text}`;
   const warn = dl.soon ? "  时间有点紧，要不要现在就排个计划？" : "";
-  return `记好了，${call}。\n「${r.title}」— ${fmtDue(r.due)}，${phrase}${r.kind !== "其他" ? " · " + r.kind : ""}。${warn}`;
+  return `记好了，${call}。\n「${r.title}」— ${formatTimeRange(r)}，${phrase}${r.kind !== "其他" ? " · " + r.kind : ""}。${warn}`;
 }
 
 /* ================= 千问对话引擎 ================= */
@@ -2427,7 +2573,7 @@ function snapshotText(list){
       const d = dayDiff(r.due);
       left = d < 0 ? `已逾期${-d}天` : d === 0 ? "今天到期" : `还剩${d}天`;
     }
-    return `${i+1}. ${r.title} | ${r.due ? fmtDue(r.due) : "待补"} | ${r.kind || "其他"} | ${left}`;
+    return `${i+1}. ${r.title} | ${r.startAt ? formatTimeRange(r) : "待补"} | ${r.kind || "其他"} | ${left}`;
   }).join("\n");
 }
 
@@ -2590,12 +2736,17 @@ function normItem(it){
   const title = String(it.title || "").trim();
   if(!title) return null;
   const raw = String(it.raw_time || "").trim();
-  const p = raw ? parseText(raw) : { due:null };
+  const p = raw ? parseText(raw) : { due:null, startAt:null, endAt:null, allDay:false };
   const due = p.due || null;
+  const startAt = p.startAt || null;
+  const endAt = p.endAt || null;
+  const allDay = !!p.allDay;
   const OK = ["作业","竞赛","考试","活动","其他"];
   const kind = OK.indexOf(it.kind) >= 0 ? it.kind : (p.kind || "其他");
-  const dueText = due ? fmtDue(due) : (raw ? raw + "（没认准时间）" : "时间待补");
-  return { title, due, kind, note:String(it.note || "").trim(), dueText };
+  const dueText = startAt
+    ? formatTimeRange({ startAt: startAt, endAt: endAt, allDay: allDay })
+    : (raw ? raw + "（没认准时间）" : "时间待补");
+  return { title, due, startAt, endAt, allDay, kind, note:String(it.note || "").trim(), dueText };
 }
 
 function looksLikeQuestion(t){
@@ -2645,7 +2796,9 @@ async function applyIntent(d, raw){
     }
     items.forEach(it=>{
       db.records.push({
-        id: uid(), title: it.title, due: it.due, kind: it.kind,
+        id: uid(), title: it.title,
+        startAt: it.startAt || null, endAt: it.endAt || null, allDay: !!it.allDay,
+        due: it.due, kind: it.kind,
         note: it.note, done: false, createdAt: Date.now()
       });
     });
@@ -2814,9 +2967,13 @@ function confirmItems(id){
   if(!m || m.done) return;
   const call = db.profile.call || "总裁";
   m.items.forEach(it => {
+    const startAt = it.startAt || (it.due ? toLocalISO(it.due) : null);
+    const sd = startAt ? fromLocalISO(startAt) : null;
     db.records.push({
-      id: uid(), title: it.title, due: it.due, kind: it.kind,
-      note: it.note, done: false, createdAt: Date.now()
+      id: uid(), title: it.title,
+      startAt: startAt, endAt: it.endAt || null, allDay: !!it.allDay,
+      due: sd ? sd.getTime() : null,
+      kind: it.kind, note: it.note, done: false, createdAt: Date.now()
     });
   });
   m.done = true;
@@ -3493,12 +3650,30 @@ function openRecord(id){
   const r = db.records.find(x => x.id === id);
   if(!r) return;
   editId = id; editKind = r.kind || "其他";
-  $("#rTitle").value = r.title;
-  $("#rDue").value = r.due ? toLocalInput(r.due) : "";
+  $("#rTitle").value = r.title || "";
+  // 老记录只有 due 也能打开：startAt 由迁移补过，这里再兜一次
+  const startAt = r.startAt || (r.due ? toLocalISO(r.due) : "");
+  $("#rStart").value = startAt || "";
+  $("#rEnd").value = r.allDay ? "" : (r.endAt || "");
+  $("#rAllDay").checked = !!r.allDay;
+  $("#rEnd").disabled = !!r.allDay;
   $("#rNote").value = r.note || "";
   paintKinds();
+  paintRecordPreview();
   $("#mask").classList.add("on");
   $("#rSheet").classList.add("on");
+}
+
+/* 编辑页预览：和列表、聊天共用同一个 formatTimeRange */
+function paintRecordPreview(){
+  const st = $("#rStart").value;
+  const en = $("#rEnd").value;
+  const allDay = $("#rAllDay").checked;
+  $("#rPreview").textContent = formatTimeRange({
+    startAt: st ? st.slice(0,16) : null,
+    endAt: (!allDay && en) ? en.slice(0,16) : null,
+    allDay: allDay
+  });
 }
 function paintKinds(){
   $("#rKinds").innerHTML = KINDS.map(k =>
@@ -3514,14 +3689,42 @@ $("#rClose").addEventListener("click", closeSheet);
 $("#rSave").addEventListener("click", ()=>{
   const r = db.records.find(x => x.id === editId);
   if(!r){ closeSheet(); return; }
+
+  const st = ($("#rStart").value || "").slice(0,16);
+  const en = ($("#rEnd").value || "").slice(0,16);
+  const allDay = $("#rAllDay").checked;
+
+  // 只有两个框都填了才校验顺序；结束留空是合法的
+  if(!allDay && st && en && new Date(en).getTime() <= new Date(st).getTime()){
+    toast("结束时间需晚于开始时间");
+    return;
+  }
+
   r.title = ($("#rTitle").value || "").trim() || r.title;
-  const v = $("#rDue").value;
-  r.due = v ? new Date(v).getTime() : null;
+  r.startAt = st || null;
+  r.allDay = !!(allDay && r.startAt);
+  r.endAt = (!r.allDay && st && en) ? en : null;
+  if(r.allDay && r.startAt) r.startAt = r.startAt.slice(0,10) + "T00:00";
+  const sd = r.startAt ? fromLocalISO(r.startAt) : null;
+  r.due = sd ? sd.getTime() : null;              // 派生值，不压缩区间
   r.kind = editKind;
   r.note = ($("#rNote").value || "").trim();
   save(); closeSheet(); renderHome(); renderNote();
   toast("已更新");
 });
+
+["#rStart","#rEnd"].forEach(sel=>{
+  const el = $(sel);
+  if(el) el.addEventListener("input", paintRecordPreview);
+});
+if($("#rAllDay")){
+  $("#rAllDay").addEventListener("change", ()=>{
+    const on = $("#rAllDay").checked;
+    const end = $("#rEnd");
+    if(end){ end.disabled = on; if(on) end.value = ""; }
+    paintRecordPreview();
+  });
+}
 $("#rDel").addEventListener("click", ()=>{
   if(!confirm("删除这一条？删了就找不回来了。")) return;
   db.records = db.records.filter(x => x.id !== editId);
@@ -3775,12 +3978,13 @@ function seed(){
   save();
 }
 /* 版本戳：判断浏览器加载的是不是最新版 */
-const APP_VER = "v0.8.1 · 2026-11-27";
+const APP_VER = "v0.9.0 · 2026-11-27";
 (function(){
   const el = $("#verLine");
   if(el) el.textContent = APP_VER + " · 对话 " + QWEN_TEXT.primary;
 })();
 
+migrateRecords();   // 老数据补 startAt/endAt，必须早于第一次渲染
 seed();
 renderAll();
 autoGrow();
