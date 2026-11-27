@@ -2271,46 +2271,117 @@ function noteAnswerLocal(t){
   return `${hit.title}：${hit.note}`;
 }
 
-/* 本地兜底用：模型连不上时也能回答"今天/明天/周三有什么课" */
+/* 把「下周五 / 本周三 / 周五 / 下周日」解析成具体日期。
+   中文习惯的规则：
+   - 「周五 / 星期三」不带前缀 → 最近的那个（含今天）
+   - 「这/本周五」→ 本自然周的周五（周一为一周起点），可能已经过去
+   - 「下周五 / 下个星期五 / 下礼拜五」→ 下一个自然周的周五，不是「+7 天」也不是本周五
+   - 「下下周五 / 再下周五」→ 再下一个自然周
+   - 「下周」不带星期 → 整周查询（d 为 null，week 给出那一周的周一）
+   shift：null=没提前缀（按最近的那个算），0=本周，1=下周，2=下下周 */
+function courseTargetDate(t, now){
+  now = now || new Date();
+  const day0 = startOfDay(now);
+  const mw = String(t || "").match(/(?:周|星期|礼拜)\s*([一二三四五六日天])/);
+  const wd = mw ? WEEK[mw[1]] : null;
+
+  let shift = null;
+  // 「下下」「再下」必须先判，否则会被「下周」吃掉
+  if(/(下下|再下)\s*个?\s*(?:周|星期|礼拜)/.test(t)) shift = 2;
+  else if(/下\s*个?\s*(?:周|星期|礼拜)/.test(t)) shift = 1;
+  else if(/(这|本)\s*个?\s*(?:周|星期|礼拜)/.test(t)) shift = 0;
+
+  if(wd == null && shift === null) return null;
+
+  // 没提前缀：最近的那个星期几（含今天）
+  if(shift === null){
+    let off = 0;
+    for(let k = 0; k < 7; k++){
+      const x = new Date(day0); x.setDate(x.getDate() + k);
+      if(x.getDay() === wd){ off = k; break; }
+    }
+    const d = new Date(day0); d.setDate(d.getDate() + off);
+    return { d: d, week: null, wd: wd, shift: null };
+  }
+
+  // 有「这周/下周/下下周」：以周一为起点算，不是加 7 天
+  const mon = mondayOf(now);
+  const base = new Date(mon); base.setDate(base.getDate() + shift * 7);
+  if(wd == null) return { d: null, week: base, wd: null, shift: shift };
+
+  const offInWeek = (wd + 6) % 7;   // 周一=0 … 周日=6
+  const d = new Date(base); d.setDate(d.getDate() + offInWeek);
+  return { d: d, week: base, wd: wd, shift: shift };
+}
+
+/* 回答里必须带日期，用户才能一眼核对：「下周五（12/4）」 */
+function courseDayLabel(d, shift, wd, now){
+  now = now || new Date();
+  const off = Math.round((startOfDay(d).getTime() - startOfDay(now).getTime()) / 864e5);
+  const md = `${d.getMonth()+1}/${d.getDate()}`;
+  const wdn = "周" + WD_CN[wd == null ? d.getDay() : wd];
+  let pre = "";
+  if(shift === 1) pre = "下";
+  else if(shift === 2) pre = "下下";
+  else if(shift === 0) pre = "本";
+  if(off === 0) return `今天（${md} ${wdn}）`;
+  if(off === 1) return `明天（${md} ${wdn}）`;
+  if(off === 2) return `后天（${md} ${wdn}）`;
+  return `${pre}${wdn}（${md}）` + (off < 0 ? "，已经过了" : "");
+}
+
+/* 本地兜底用：模型连不上时也能回答"今天/明天/下周五有什么课"
+   注意顺序：「后天」要判在「明天」前面；「下下周五」由 courseTargetDate 内部先判 */
 function courseAnswerLocal(t){
   const now = new Date();
-  let off = null;
-  if(/今天|今日/.test(t)) off = 0;
-  else if(/明天|明日/.test(t)) off = 1;
+  const day0 = startOfDay(now);
+  let d = null, shift = null, wd = null;
+
+  if(/今天|今日/.test(t)){ d = new Date(day0); }
+  else if(/后天/.test(t)){ d = new Date(day0); d.setDate(d.getDate() + 2); }
+  else if(/明天|明日/.test(t)){ d = new Date(day0); d.setDate(d.getDate() + 1); }
   else{
-    const m = t.match(/(?:周|星期)([一二三四五六日天])/);
-    if(m){
-      const target = WEEK[m[1]];
-      for(let k = 0; k < 8; k++){
-        const d = new Date(now); d.setDate(d.getDate() + k);
-        if(d.getDay() === target){ off = k; break; }
+    const tg = courseTargetDate(t, now);
+    if(!tg) return "";
+    // 整周查询（「下周有什么课」）：没有具体星期，就把那周每天有课的列出来
+    if(!tg.d){
+      const out = [];
+      for(let i = 0; i < 7; i++){
+        const x = new Date(tg.week); x.setDate(x.getDate() + i);
+        const l = coursesAt(x);
+        if(l.length) out.push(`· ${courseDayLabel(x, tg.shift, null, now)} ${l.length} 节：` +
+          l.map(c => { const ct = courseTime(c); return `${ct.b ? ct.a + "-" + ct.b : ct.a} ${c.title}`; }).join("、"));
       }
+      const pre = tg.shift === 2 ? "下下周" : tg.shift === 1 ? "下周" : "本周";
+      return out.length ? `${pre}有课：\n` + out.join("\n") : `${pre}没课。`;
     }
+    d = tg.d; shift = tg.shift; wd = tg.wd;
   }
-  if(off === null) return "";
-  const d = new Date(now); d.setDate(d.getDate() + off);
+
   const list = coursesAt(d);
-  const label = off === 0 ? "今天" : off === 1 ? "明天" : "周" + WD_CN[d.getDay()];
+  const label = courseDayLabel(d, shift, wd, now);
   if(!list.length) return `${label}没课。`;
-  return `${label}有 ${list.length} 节：\n` + list.map(c=>{
+  return `${label}有 ${list.length} 节：\n` + list.map(c => {
     const ct = courseTime(c);
     const span = ct.b ? `${ct.a}-${ct.b}` : ct.a;
     return `· ${span} ${c.title}${c.room ? "（" + c.room + "）" : ""}`;
   }).join("\n");
 }
 
-/* 喂给大模型的课程上下文：未来 7 天，够回答"今天/明天/周三有什么课"，
-   又不至于把整张课表塞进提示词。超出 7 天的，模型会直说看不到。 */
+/* 喂给大模型的课程上下文：未来 14 天，够回答"今天/明天/周三/下周五有什么课"，
+   又不至于把整张课表塞进提示词。每行带日期和「第N周」，方便单双周核对。 */
 function courseSnapshot(){
   if(!Array.isArray(db.courses) || !db.courses.length) return "";
   const now = new Date();
   const out = [];
-  for(let off = 0; off < 7; off++){
+  for(let off = 0; off < 14; off++){
     const d = new Date(now);
     d.setDate(d.getDate() + off);
     const list = coursesAt(d);
-    const label = off === 0 ? "今天" : off === 1 ? "明天" : "周" + WD_CN[d.getDay()];
-    const dateStr = `${d.getMonth()+1}/${d.getDate()}`;
+    // 超过两天后会有两个「周五」，必须带上「后天」和日期才分得清
+    const label = off === 0 ? "今天" : off === 1 ? "明天" : off === 2 ? "后天" : "周" + WD_CN[d.getDay()];
+    const wn = weekNoOf(d);
+    const dateStr = `${d.getMonth()+1}/${d.getDate()}` + (wn > 0 ? ` · 第${wn}周` : "");
     if(!list.length){ out.push(`${label}（${dateStr}）：没课`); continue; }
     const txt = list.map(c=>{
       const t = courseTime(c);
@@ -2837,7 +2908,7 @@ function buildSysPrompt(list, hint){
 【记事本快照】
 ${snapshotText(list)}
 
-【课程】（未来 7 天；问更远的日子就说课表里看不到）
+【课程】（未来 14 天，每行带日期和「第N周」；问更远的日子就说课表里看不到）
 ${cs || "（还没导入课表）"}
 
 【判断意图】只输出一个 JSON 对象，不要代码块、不要任何解释：
@@ -2885,7 +2956,11 @@ reply 写什么：
 - query 只能依据【记事本快照】和【课程】回答，两处都没有就说没有，绝不编造事项、时间、地点。
 - 问"在哪办 / 要带什么 / 怎么报名"，看快照条目后面的「备注」段，照抄里面的信息，不要自己补充。
 - 句子里只要出现"课 / 上课 / 教室 / 老师 / 第几节"，先看【课程】再回答；"今天有什么"（没说"课"）才是问截止事项。
-- 问课程、教室、老师，看【课程】段。只给了未来 7 天，问更远的就直接说课表里看不到。
+- 问课程、教室、老师，看【课程】段（未来 14 天，每天带日期和「第N周」）。
+- 日期词按中文习惯理解：「周五」= 最近的那个周五（含今天）；「本周五」= 本自然周；
+  「下周五」= 下一个自然周的周五，不是 7 天后，也不是本周五；「下下周五」= 再下一个自然周。
+- 回答任何一天的课，都必须把日期写出来，例如「下周五（12/4）有 2 节」，让用户能核对。
+- 【课程】段里没有的日期，直接说「课表里看不到那天」，绝对不要拿别的天顶替。
 - chat 里被问到现在几点、今天几号、星期几，直接用【现在】里的信息回答。
 - 不知道就直说不知道，不要编。
 - record / complete 的 reply 只写一句轻轻确认，不要自己写具体日期时间，系统会补。
@@ -4477,7 +4552,7 @@ function seed(){
   save();
 }
 /* 版本戳：判断浏览器加载的是不是最新版 */
-const APP_VER = "v0.13.0 · 2026-11-27";
+const APP_VER = "v0.14.0 · 2026-11-27";
 (function(){
   const el = $("#verLine");
   if(el) el.textContent = APP_VER + " · 对话 " + QWEN_TEXT.primary;
