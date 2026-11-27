@@ -442,6 +442,11 @@ html[data-theme="aurora"] .app::after{content:none}
 [data-theme="candy"] .cs-ops .ghost{background:#F3FBF9;border:2px solid #231F1C}
 [data-theme="aurora"] .cs-it{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}
 [data-theme="aurora"] .cs-it-warn{border-color:rgba(251,191,36,.65);box-shadow:0 0 0 1px rgba(251,191,36,.2)}
+/* 这一周不上的课（单双周不对 / 不在周次范围里）：整行压暗 + 课程名删除线。
+   opacity 和 line-through 两个主题通用，不用分别写 */
+.cs-it-off{opacity:.45}
+.cs-it-off .cs-main b{text-decoration:line-through;text-decoration-thickness:1px}
+.cs-wkhint{font-size:10px;opacity:.55;margin:-3px 0 9px 2px;min-height:13px}
 [data-theme="candy"] .cs-it-edit{background:#FFFBEF;border:2px solid #231F1C;box-shadow:3px 3px 0 #FFD23F}
 [data-theme="candy"] .cs-wd-b{border:1.5px solid rgba(35,31,28,.26);background:#fff;color:#231F1C}
 [data-theme="candy"] .cs-wd-b.on{background:#231F1C;color:#fff;border-color:#231F1C}
@@ -1037,6 +1042,10 @@ html[data-theme="aurora"] .app::after{content:none}
     <div class="sec-title2">它怎么称呼你</div>
     <div class="pair"><input class="field" id="fCall" maxlength="10" placeholder="总裁"></div>
 
+    <div class="sec-title2">开学第一周周一</div>
+    <div class="pair"><input class="field" id="fWeek1" type="date"></div>
+    <p class="desc">填了才能自动跳过单双周，填的是第 1 周的周一。</p>
+
     <div class="sec-title2">头像</div>
     <div class="ava-grid" id="avaGrid"></div>
 
@@ -1146,12 +1155,17 @@ const DEF = {
   courses: [],
   periods: [],
   chats: [],
+  // term.week1：第 1 周的周一（YYYY-MM-DD）。单双周全靠它算「现在第几周」。
+  // 默认填 2026-09-07：这周（2026-11-23 那周）正好是第 12 周（双周）。
+  // 实际学期如果不是这天开学，在设置里改一下就行，改完立刻生效。
+  term: { week1: "2026-09-07" },
   seeded: false
 };
 let db = load();
 if(!Array.isArray(db.courses)) db.courses = [];
 if(!Array.isArray(db.periods)) db.periods = [];
 if(!Array.isArray(db.records)) db.records = [];
+if(!db.term || typeof db.term !== "object") db.term = { week1: "" };
 
 function load(){
   try{
@@ -1694,13 +1708,16 @@ function coursePrompt(){
 输出结构：
 {"courses":[…],"periods":[…]}
 
-courses 每一项只有 4 个字段：
+courses 每一项只有 5 个字段：
 - title：课程名称，照原文写。只写课程名，不要把节次、周次、教室、老师拼进去
 - weekday：星期几，统一写成「周一」「周二」…「周日」。表头是「星期一」就归一成「周一」
 - time：这门课的时间，照原文抄。有具体时刻就抄时刻（"08:00-09:40"）；只有节次就抄节次
-  （"第1-2节"）；两样都有就都写（"第1-2节 08:00-09:40"）。不要输出 teacher 字段
+  （"第1-2节"）；两样都有就都写（"第1-2节 08:00-09:40"）。不要输出 teacher 字段，
+  也不要把周次写进这里
 - room：上课地点，照原文写，保留校区和教室号，例如"本部 10-309""三教 205"；
   图上没写就填空字符串 ""
+- weeks：上课周次，照原文抄，包括单双周标记。例如"3-18周""4-18周(双)""3-17周(单)""5-8周"。
+  没写就填空字符串 ""。不要换算、不要补全、不要把"(双)(单)"丢掉
 
 periods 每一项（只在作息时间表里）：from / to / start / end，例：
 "第1-2节 08:00-09:40" → from:1,to:2,start:"08:00",end:"09:40"
@@ -1709,10 +1726,11 @@ periods 每一项（只在作息时间表里）：from / to / start / end，例�
 1. 一格 = 一节课。合并单元格也只输出一条，不要拆成重复多条。
 2. 斜杠长串「高等数学I/(3-3节)3-18周/本部 10-309/刘文斌」只取第一段当 title；
    带数字、带楼栋/教室号的那段填 room（"本部 10-309" 整段保留，别只留房间号）；
-   老师名、周次、学时学分一律丢掉，不要写进任何字段。
+   老师名、学时、学分丢掉，不要写进任何字段；周次（含单双周括号）填进 weeks。
 3. room 只抄图上出现的教室，不许根据课程猜、不许编"待定""教室待补"。
+3.1 weeks 必须原样保留单双周标记："4-18周(双)"不能写成"4-18周"，"3-17周(单)"不能丢掉"(单)"。
 4. 这些不是课程：第一、二节课 / 课间休息 / 午餐、午休 / 预备铃 / 早操 / 宿舍关门 /
-   备注，以及"节次""星期""课程"这类表头。它们只能进 periods。
+   值班 / 备注，以及"节次""星期""课程"这类表头。它们只能进 periods。
 5. 只有课程表 → periods 输出 []；只有作息表 → courses 输出 []。
 6. 认不准的格子直接跳过。宁可少一条，不要造一条。
 7. courses 最多 40 条，periods 最多 20 条。
@@ -1731,7 +1749,7 @@ function splitCellFields(text){
   const parts = raw.split(/[\/／]/).map(s => s.trim()).filter(Boolean);
   if(parts.length < 3) return null;
 
-  const out = { title: parts[0], teacher: "", room: "", note: "", hours: 0, credit: 0, pf: 0, pt: 0 };
+  const out = { title: parts[0], teacher: "", room: "", note: "", weeksRaw: "", hours: 0, credit: 0, pf: 0, pt: 0 };
   const nums = [];
 
   parts.slice(1).forEach(p => {
@@ -1753,7 +1771,8 @@ function splitCellFields(text){
     }
 
     if(/周/.test(rest)){
-      out.note = out.note ? out.note + " " + rest : rest;
+      // 周次（含单双周括号）留着，进 weeksRaw，别让它跟着 note 变成备注
+      out.weeksRaw = out.weeksRaw ? out.weeksRaw + " " + rest : rest;
       return;
     }
     if(!rest) return;
@@ -1779,6 +1798,33 @@ function isTimeBlockTitle(t){
   if(/^(第?[一二三四五六七八九十]{1,2}[、\-—~至]?[一二三四五六七八九十]{0,2}节课?)$/.test(s)) return true;
   if(/^(课间休息|午休|午餐.*|晚餐.*|早操|课间操|休息|.*预备铃|.*宿舍.*|.*关门.*)$/.test(s)) return true;
   return false;
+}
+
+/* 周次原样字符串 → { from, to, parity, raw }
+   "4-18周(双)" → 4,18,"even"；"3-17周(单)" → 3,17,"odd"；"5-8周" → 5,8,"all"；
+   "第5周" → 5,5,"all"；空/认不出 → 0,0,"all"（按每周处理，不报错）。
+   注意「单双周」同时出现算 all（每周都上），不要判成单周。 */
+function parseWeeks(raw){
+  const s = String(raw || "").replace(/\s+/g, "");
+  const m = s.match(/(\d{1,2})\s*[-–—~～至到]\s*(\d{1,2})\s*周/) || s.match(/第?(\d{1,2})\s*周/);
+  let from = 0, to = 0;
+  if(m){
+    from = +m[1];
+    to = m[2] ? +m[2] : from;
+    if(to < from){ const t = from; from = to; to = t; }
+  }
+  const odd = /单/.test(s), even = /双/.test(s);
+  const parity = (odd && even) ? "all" : odd ? "odd" : even ? "even" : "all";
+  return { from: from, to: to, parity: parity, raw: String(raw || "").trim() };
+}
+
+/* 编辑表单里那行实时提示：能解析就写「第 4–18 周，双周」，解析不出就「按每周处理」 */
+function weekHintText(raw){
+  const wk = parseWeeks(raw);
+  if(!(wk.from > 0)) return "按每周处理";
+  const rng = wk.from === wk.to ? `第 ${wk.from} 周` : `第 ${wk.from}–${wk.to} 周`;
+  const p = wk.parity === "odd" ? "，单周" : wk.parity === "even" ? "，双周" : "";
+  return rng + p;
 }
 
 /* 模型偶尔只吐数组（老格式），也可能吐 {courses,periods}。
@@ -1854,6 +1900,9 @@ function parseCourseJSON(text){
     const hours = parseInt(it.hours, 10) || 0;
     const credit = parseFloat(it.credit) || 0;
 
+    // 周次：契约里的第 5 个字段；模型没给时用斜杠格的拆分结果兜底
+    const wk = parseWeeks(it.weeks || (cell ? cell.weeksRaw : ""));
+
     return {
       title: (cell ? cell.title : String(it.title || "").trim()) || "未命名课程",
       teacher: teacher,
@@ -1871,6 +1920,10 @@ function parseCourseJSON(text){
       fixE: !!tm.end,
       pf: pf,
       pt: pt,
+      weekFrom: wk.from,
+      weekTo: wk.to,
+      parity: wk.parity,
+      weeksRaw: wk.raw,
       rawDate: rawDate,
       rawTime: rawTime
     };
@@ -2134,25 +2187,71 @@ function courseTime(c){
   return { a:c.start, b:c.end || "" };
 }
 function byStart(a, b){ return toMin(a.start) - toMin(b.start); }
+
+/* ---- 单双周 / 周次范围 ----
+   识别阶段只把周次原样抄进 weeksRaw（"4-18周(双)"），这里按「学期第一周周一」
+   算出现在第几周，再判断这节课这周上不上。每次现算、不缓存，
+   这样用户在设置里改开学日期后立刻生效。 */
+function mondayOf(d){
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+  return x;
+}
+function weekNoOf(d){
+  const base = (db.term && db.term.week1) || "";
+  if(!base) return 0;
+  const b = new Date(base + "T00:00:00");
+  if(isNaN(b.getTime())) return 0;
+  const diff = Math.round((mondayOf(d) - mondayOf(b)) / 6048e5);
+  return diff >= 0 ? diff + 1 : 0;
+}
+function currentWeekNo(){ return weekNoOf(new Date()); }
+
+/* 有具体日期的一次性课程不参与周次判断；不知道第几周（没填开学日期）就一律放行，
+   但面板上会提示「单双周暂时不生效」，不做静默处理 */
+function courseOnWeek(c, wk){
+  if(!c) return false;
+  if(c.date) return true;
+  if(!wk || wk <= 0) return true;
+  const p = c.parity || "all";
+  if(p === "odd" && wk % 2 === 0) return false;
+  if(p === "even" && wk % 2 === 1) return false;
+  if(c.weekFrom > 0 && wk < c.weekFrom) return false;
+  if(c.weekTo > 0 && wk > c.weekTo) return false;
+  return true;
+}
+
+/* 课表行右侧的周次标签：4-18周(双) / 第5周 / 3-18周；没有周次就不显示 */
+function weekLabel(c){
+  if(!c || !(c.weekFrom > 0)) return "";
+  const rng = c.weekFrom === c.weekTo ? `第${c.weekFrom}周` : `${c.weekFrom}-${c.weekTo}周`;
+  return rng + (c.parity === "odd" ? "(单)" : c.parity === "even" ? "(双)" : "");
+}
+
 function coursesOn(wd){
   return db.courses.filter(c => c.weekday === wd).sort(byStart);
 }
-/* 当天课程：有具体日期的看日期，只有星期的看星期几 */
+/* 当天课程：有具体日期的看日期，只有星期的看星期几，再按本周是否上课过滤 */
 function todayCourses(){
   const now = new Date();
   const t0 = startOfDay(now).getTime();
   const wd = now.getDay();
+  const wk = currentWeekNo();
   return db.courses
-    .filter(c => c.date ? startOfDay(new Date(c.date)).getTime() === t0 : c.weekday === wd)
+    .filter(c => (c.date ? startOfDay(new Date(c.date)).getTime() === t0 : c.weekday === wd)
+              && courseOnWeek(c, wk))
     .sort(byStart);
 }
 
-/* 指定某天的课：写过具体日期的按日期匹配，只写"周一"的按星期匹配 */
+/* 指定某天的课：写过具体日期的按日期匹配，只写"周一"的按星期匹配；
+   周次按 d 所在的那一周算，不是按今天 */
 function coursesAt(d){
   const t0 = startOfDay(d).getTime();
   const wd = d.getDay();
+  const wk = weekNoOf(d);
   return (db.courses || [])
-    .filter(c => c.date ? startOfDay(new Date(c.date)).getTime() === t0 : c.weekday === wd)
+    .filter(c => (c.date ? startOfDay(new Date(c.date)).getTime() === t0 : c.weekday === wd)
+              && courseOnWeek(c, wk))
     .sort(byStart);
 }
 
@@ -3183,7 +3282,7 @@ function settleDraft(){
 /* ================= 课表行内编辑 =================
    同一时间只允许一行处于编辑态。csEdit 里存的是表单的「草稿值」：
    输入时只更新这个对象、不重绘，否则每敲一个字都会丢焦点。 */
-let csEdit = null;   // { mode:"draft"|"saved", key, title, teacher, weekday, room, start, end }
+let csEdit = null;   // { mode:"draft"|"saved", key, title, teacher, weekday, room, weeks, start, end }
 
 function isHHMM(v){
   return /^([01]\d|2[0-3]):[0-5]\d$/.test(String(v || ""));
@@ -3217,6 +3316,11 @@ function courseEditHTML(delAttr){
     <label class="cs-f"><i>教室</i>
       <input class="field" data-edit-f="room" maxlength="20" value="${escapeHTML(e.room)}" placeholder="例如 三教 205">
     </label>
+    <label class="cs-f"><i>周次</i>
+      <input class="field" data-edit-f="weeks" maxlength="16" value="${escapeHTML(e.weeks)}"
+             placeholder="留空 = 每周；也可写 4-18周(双)">
+    </label>
+    <div class="cs-wkhint" data-edit-wkhint>${escapeHTML(weekHintText(e.weeks))}</div>
     <div class="cs-f"><i>时间</i>
       <div class="cs-timeline">
         <input class="field" type="time" data-edit-f="start" value="${e.start}">
@@ -3241,6 +3345,10 @@ function openCourseEdit(mode, key){
     teacher: c.teacher || "",
     weekday: c.weekday == null ? new Date().getDay() : c.weekday,
     room: c.room || "",
+    // 老数据没有 weeksRaw，就用算好的 from/to/parity 拼回去，改的时候不用重打
+    weeks: c.weeksRaw || (c.weekFrom > 0
+      ? `${c.weekFrom}-${c.weekTo}周` + (c.parity === "odd" ? "(单)" : c.parity === "even" ? "(双)" : "")
+      : ""),
     start: c.start || "",
     end: c.end || ""
   };
@@ -3272,6 +3380,7 @@ function commitCourseEdit(){
   const title = String(e.title || "").trim();
   const teacher = String(e.teacher || "").trim();
   const room = String(e.room || "").trim();
+  const wk = parseWeeks(e.weeks);
   const start = e.start || "";
   const end = e.end || "";
 
@@ -3280,6 +3389,7 @@ function commitCourseEdit(){
     if(c){
       c.title = title; c.teacher = teacher; c.weekday = e.weekday; c.room = room;
       c.start = start; c.end = end;
+      c.weekFrom = wk.from; c.weekTo = wk.to; c.parity = wk.parity; c.weeksRaw = wk.raw;
       // 手改过时间就清掉节次：不清的话 settleDraft() 会按作息表把时刻换算回去
       c.pf = 0; c.pt = 0; c.fixS = true; c.fixE = true;
     }
@@ -3293,6 +3403,7 @@ function commitCourseEdit(){
   if(!c){ renderCourseSheet(); return; }
   c.title = title; c.teacher = teacher; c.weekday = e.weekday; c.room = room;
   c.start = start; c.end = end;
+  c.weekFrom = wk.from; c.weekTo = wk.to; c.parity = wk.parity; c.weeksRaw = wk.raw;
   // 清 pf/pt + 置 fixS/fixE：否则作息表会把用户手填的时刻盖掉
   c.pf = 0; c.pt = 0; c.fixS = true; c.fixE = true;
   save(); renderCourseSheet(); renderNote();
@@ -3336,9 +3447,11 @@ function renderCourseSheet(){
       const meta = ["周" + WD_CN[c.weekday]];
       if(c.teacher) meta.push(c.teacher);
       if(c.room) meta.push(c.room);
+      const wl = weekLabel(c);
+      if(wl) meta.push(wl);
       // 只有“11月16日”这种具体日期才额外显示，别把“周一”重复一遍
       if(/\d/.test(c.rawDate || "")) meta.push(c.rawDate);
-      return `<div class="cs-it${c.room ? "" : " cs-it-warn"}" data-drow="${i}">
+      return `<div class="cs-it${c.room ? "" : " cs-it-warn"}${courseOnWeek(c, currentWeekNo()) ? "" : " cs-it-off"}" data-drow="${i}">
         <div class="cs-time"><b>${ct.a}</b><span>${ct.b}</span></div>
         <div class="cs-main"><b>${escapeHTML(c.title)}</b><span>${escapeHTML(meta.join(" · "))}</span></div>
         <button class="cs-del" data-cdrop="${i}" aria-label="去掉">×</button>
@@ -3356,9 +3469,12 @@ function renderCourseSheet(){
   }
 
   const total = db.courses.length;
+  const wkNow = currentWeekNo();
   $("#cTitle").textContent = "我的课表";
+  // 没填开学日期就不过滤，但要明说，不能让用户以为单双周已经生效了
+  const wkLine = wkNow > 0 ? `现在是第 ${wkNow} 周（${wkNow % 2 ? "单周" : "双周"}）。` : "还没填开学日期，单双周暂时不生效。";
   $("#cDesc").textContent = total
-    ? `共 ${total} 节课，按周一到周日排。`
+    ? `共 ${total} 节课，按周一到周日排。` + wkLine
     : "还没有课。课程表和作息表可以分开拍，一次选多张一起认，我按节次对上时间。";
 
   if(!total){
@@ -3378,10 +3494,13 @@ function renderCourseSheet(){
           const meta = [];
           if(c.teacher) meta.push(c.teacher);
           if(c.room) meta.push(c.room);
+          const wl = weekLabel(c);
+          if(wl) meta.push(wl);
           if(c.hours) meta.push(c.hours + "学时");
           if(c.date) meta.push(mdText(c.date));
           if(c.note) meta.push(c.note);
-          return `<div class="cs-it${c.room ? "" : " cs-it-warn"}" data-srow="${c.id}">
+          // 整张表照常列，但当周不上的行压暗 + 课程名删除线，一眼能看出这节这周不上
+          return `<div class="cs-it${c.room ? "" : " cs-it-warn"}${courseOnWeek(c, currentWeekNo()) ? "" : " cs-it-off"}" data-srow="${c.id}">
             <div class="cs-time"><b>${ct.a}</b><span>${ct.b}</span></div>
             <div class="cs-main"><b>${escapeHTML(c.title)}</b><span>${escapeHTML(meta.join(" · "))}</span></div>
             <button class="cs-del" data-cdel="${c.id}" aria-label="删除">×</button>
@@ -3412,14 +3531,20 @@ function saveCourses(){
 
   let added = 0, dup = 0;
   csDraft.forEach(c => {
+    // 去重必须带上周次：同一门课周一 3-4 节分单周、双周两条是完全正常的，
+    // 只看 title/星期/时间/教室会把其中一条吃掉
     const same = db.courses.some(x =>
       x.title === c.title && x.weekday === c.weekday &&
-      (x.start || "") === (c.start || "") && (x.room || "") === (c.room || ""));
+      (x.start || "") === (c.start || "") && (x.room || "") === (c.room || "") &&
+      (x.parity || "all") === (c.parity || "all") &&
+      (x.weekFrom || 0) === (c.weekFrom || 0) && (x.weekTo || 0) === (c.weekTo || 0));
     if(same){ dup++; return; }
     db.courses.push({
       id: uid(), title: c.title, teacher: c.teacher || "", weekday: c.weekday, date: c.date || null,
       start: c.start || "", end: c.end || "", room: c.room || "", note: c.note || "",
-      hours: c.hours || 0, credit: c.credit || 0, pf: c.pf || 0, pt: c.pt || 0
+      hours: c.hours || 0, credit: c.credit || 0, pf: c.pf || 0, pt: c.pt || 0,
+      weekFrom: c.weekFrom || 0, weekTo: c.weekTo || 0,
+      parity: c.parity || "all", weeksRaw: c.weeksRaw || ""
     });
     added++;
   });
@@ -3870,6 +3995,7 @@ function openSheet(){
   draft = JSON.parse(JSON.stringify(db.profile));
   $("#fName").value = draft.name;
   $("#fCall").value = draft.call;
+  $("#fWeek1").value = (db.term && db.term.week1) || "";
   paintAvatars();
   document.querySelectorAll("[data-theme-pick]").forEach(el=>{
     el.classList.toggle("on", el.dataset.themePick === draft.theme);
@@ -4144,6 +4270,11 @@ $("#cSheet").addEventListener("input", e=>{
     csEdit.teacher = f.value;
   }else if(k === "room"){
     csEdit.room = f.value;
+  }else if(k === "weeks"){
+    csEdit.weeks = f.value;
+    // 这行提示不刷新的话，就是「能打字但不生效」的错觉
+    const h = document.querySelector("[data-edit-wkhint]");
+    if(h) h.textContent = weekHintText(f.value);
   }
   syncEditSave();
 });
@@ -4189,6 +4320,9 @@ $("#saveBtn").addEventListener("click", ()=>{
   db.profile.call = (draft.call||"").trim() || "总裁";
   db.profile.theme = draft.theme;
   db.profile.avatar = draft.avatar;
+  // 开学第一周周一：单双周全靠它，改完 currentWeekNo() 立刻按新日期算
+  db.term = db.term && typeof db.term === "object" ? db.term : { week1: "" };
+  db.term.week1 = ($("#fWeek1").value || "").trim();
   save(); closeSheet(); renderAll();
   toast("设置已保存");
 });
@@ -4343,7 +4477,7 @@ function seed(){
   save();
 }
 /* 版本戳：判断浏览器加载的是不是最新版 */
-const APP_VER = "v0.12.0 · 2026-11-27";
+const APP_VER = "v0.13.0 · 2026-11-27";
 (function(){
   const el = $("#verLine");
   if(el) el.textContent = APP_VER + " · 对话 " + QWEN_TEXT.primary;
