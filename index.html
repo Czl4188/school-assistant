@@ -422,6 +422,40 @@ html[data-theme="aurora"] .app::after{content:none}
 [data-theme="aurora"] .cs-ops .no{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2)}
 [data-theme="aurora"] .cs-ops .ghost{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.16)}
 
+/* ================= 时间核对 ================= */
+.tv-sec{margin-bottom:15px}
+.tv-h{display:flex;align-items:center;gap:7px;margin:0 2px 7px;font-size:10.5px;font-weight:850;letter-spacing:0;opacity:.55}
+.tv-h em{font-style:normal;letter-spacing:0;font-weight:700;opacity:.75}
+.tv-row{display:flex;align-items:flex-start;gap:9px;padding:9px 11px;border-radius:11px;margin-bottom:6px}
+.tv-k{flex:none;font-size:9px;font-weight:850;padding:2px 6px;border-radius:5px;margin-top:1px}
+.tv-c{min-width:0;flex:1}
+.tv-c b{display:block;font-size:12.5px;font-weight:750;line-height:1.4;word-break:break-word}
+.tv-c span{display:block;font-size:10px;opacity:.5;margin-top:3px;line-height:1.45;word-break:break-word}
+.tv-none{font-size:11px;opacity:.4;line-height:1.7;padding:9px 2px 10px}
+.tv-verdict{padding:12px 13px;border-radius:12px;margin-top:3px}
+.tv-vt{font-size:12.5px;font-weight:850;line-height:1.5;margin-bottom:5px}
+.tv-verdict p{font-size:11px;line-height:1.75;opacity:.72;white-space:pre-wrap;word-break:break-word}
+.tv-tip{font-size:10px;opacity:.42;line-height:1.65;margin-top:7px}
+.tv-empty{font-size:11.5px;opacity:.45;line-height:1.85;padding:14px 2px 16px;text-align:center}
+.tv-prog{display:flex;align-items:center;justify-content:center;gap:7px;font-size:11px;opacity:.55;padding:12px 0 2px}
+.tv-prog i{width:5px;height:5px;border-radius:50%;background:currentColor;animation:tp 1.2s infinite}
+[data-theme="candy"] .tv-row{background:#fff;border:1.5px solid rgba(35,31,28,.9);box-shadow:2px 2px 0 #FFD23F}
+[data-theme="candy"] .tv-k{background:#F2E7DA;color:#231F1C;border:1px solid #231F1C}
+[data-theme="candy"] .tv-verdict.ok{background:#E9FBF3;border:2px solid #231F1C}
+[data-theme="candy"] .tv-verdict.ok .tv-vt{color:#127A57}
+[data-theme="candy"] .tv-verdict.bad{background:#FFF0E8;border:2px solid #231F1C}
+[data-theme="candy"] .tv-verdict.bad .tv-vt{color:#C7391B}
+[data-theme="candy"] .tv-verdict.warn{background:#F7F4EE;border:2px dashed rgba(35,31,28,.55)}
+[data-theme="candy"] .tv-verdict.warn .tv-vt{color:rgba(35,31,28,.6)}
+[data-theme="aurora"] .tv-row{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}
+[data-theme="aurora"] .tv-k{background:rgba(167,139,250,.2);color:#c4b5fd;border:1px solid rgba(167,139,250,.35)}
+[data-theme="aurora"] .tv-verdict.ok{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.35)}
+[data-theme="aurora"] .tv-verdict.ok .tv-vt{color:#6ee7b7}
+[data-theme="aurora"] .tv-verdict.bad{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.4)}
+[data-theme="aurora"] .tv-verdict.bad .tv-vt{color:#fca5a5}
+[data-theme="aurora"] .tv-verdict.warn{background:rgba(255,255,255,.05);border:1px dashed rgba(255,255,255,.25)}
+[data-theme="aurora"] .tv-verdict.warn .tv-vt{color:rgba(255,255,255,.6)}
+
 /* ================= 输入区 ================= */
 .composer{
   position:relative;z-index:6;flex:none;
@@ -866,6 +900,10 @@ html[data-theme="aurora"] .app::after{content:none}
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="1.4" y="2.6" width="9.2" height="8" rx="1.6"/><path d="M1.4 4.8h9.2M4 1.4v2.4M8 1.4v2.4"/></svg>
           本周安排
         </div>
+        <div class="chip" id="tvChip">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M1.6 3.2h4.2M1.6 6h4.2M1.6 8.8h4.2"/><path d="M8.2 6.2l1.3 1.4 1.9-2.4"/></svg>
+          时间核对
+        </div>
       </div>
       <div class="hint" style="text-align:center;font-size:10px;margin-top:16px">把截图或文字丢进对话框，我帮你记</div>
     </section>
@@ -1007,6 +1045,18 @@ html[data-theme="aurora"] .app::after{content:none}
     <p class="desc" id="cDesc"></p>
     <div id="csBody"></div>
     <div id="csFoot"></div>
+  </div>
+
+  <!-- 时间核对 -->
+  <div class="sheet" id="tSheet">
+    <div class="sheet-handle"></div>
+    <button class="sheet-close" id="tClose" aria-label="关闭">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.4 2.4l7.2 7.2M9.6 2.4L2.4 9.6"/></svg>
+    </button>
+    <h3 id="tTitle">时间核对</h3>
+    <p class="desc" id="tDesc"></p>
+    <div id="tvBody"></div>
+    <div id="tvFoot"></div>
   </div>
 
   <!-- 图片入口 -->
@@ -2461,6 +2511,7 @@ async function handleImage(input, mode){
   const imgs = files.filter(f => /^image\//.test(f.type || ""));
   if(!imgs.length){ toast("只支持图片文件"); return; }
   if(mode === "course"){ importCourseImages(imgs); return; }
+  if(mode === "time"){ importTimeImages(imgs); return; }
 
   // 记事项这条链路仍然一张一张来
   const file = imgs[0];
@@ -2697,18 +2748,365 @@ async function importCourseImages(files){
   if(errs.length) toast(errs[0]);
 }
 
+/* ================= 时间核对 =================
+   把「通知正文」和「表单界面」上的时间当成两条独立来源，只做
+   提取 → 标注 → 判定，不替用户选哪个为准，也不合并、不改写时间。
+
+   判定规则（写死在这里，方便复核）：
+   1) 缺来源 A 或 B       → 信息不全，不做判定
+   2) 日期不同            → 存在时间冲突
+   3) 日期相同、时段不同  → 截止早于活动开始 / 晚于活动结束：设计上的错开，无冲突
+                            截止落在活动进行中：时段逻辑矛盾，存在时间冲突
+   4) 日期与时刻都相同    → 无冲突
+================================================== */
+let tvSources = [];   // { id, kind:"A"|"B"|"?", label, raw, date, start, end }
+let tvBusy = false;
+let tvProg = "";
+let tvShots = 0;
+
+function ymdOf(ts){
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+function hmOf(ts){
+  const d = new Date(ts);
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function normDate(v){
+  const m = String(v || "").trim().match(/^(\d{4})\s*[-\/.]\s*(\d{1,2})\s*[-\/.]\s*(\d{1,2})$/);
+  return m ? `${m[1]}-${pad(+m[2])}-${pad(+m[3])}` : "";
+}
+function normHM(v){
+  const m = String(v || "").trim().match(/^(\d{1,2})\s*[:：]\s*(\d{2})$/);
+  if(!m) return "";
+  const h = +m[1], mi = +m[2];
+  return (h > 23 || mi > 59) ? "" : pad(h) + ":" + pad(mi);
+}
+function minOf(t){
+  const m = String(t || "").match(/^(\d{1,2}):(\d{2})$/);
+  return m ? (+m[1]) * 60 + (+m[2]) : null;
+}
+/* 从原文里取时段的后半段，例如 14:00-17:00 的 17:00 */
+function endFromRaw(raw){
+  const m = String(raw || "").match(/(\d{1,2})\s*[:：]\s*(\d{2})\s*[-–—~～至到]+\s*(\d{1,2})\s*[:：]\s*(\d{2})/);
+  return m ? pad(+m[3]) + ":" + m[4] : "";
+}
+/* 从原文兜底取日期：只补「今年」，不往后一年滚。
+   核对场景里宁可年份存疑（后面会被年份不一致的提示兜住），也不要替用户推测。 */
+function dateFromRaw(raw){
+  const s = String(raw || "");
+  const y = new Date().getFullYear();
+  let m = s.match(/(\d{4})\s*[-\/.]\s*(\d{1,2})\s*[-\/.]\s*(\d{1,2})/);
+  if(m) return `${m[1]}-${pad(+m[2])}-${pad(+m[3])}`;
+  m = s.match(/(\d{1,2})\s*月\s*(\d{1,2})\s*[日号]?/);
+  if(m) return `${y}-${pad(+m[1])}-${pad(+m[2])}`;
+  m = s.match(/(\d{1,2})\s*[\/]\s*(\d{1,2})/);
+  if(m && +m[1] <= 12 && +m[2] <= 31) return `${y}-${pad(+m[1])}-${pad(+m[2])}`;
+  return "";
+}
+function fmtDateCn(d){
+  const m = String(d || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m ? `${+m[2]}月${+m[3]}日` : (d || "日期不明");
+}
+
+function timePrompt(){
+  const t = new Date();
+  const wl = ["日","一","二","三","四","五","六"];
+  const today = `${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())}`;
+  return `你是通知时间核对助手。今天是 ${today}（周${wl[t.getDay()]}）。
+
+这张图可能是「活动通知正文」，也可能是「报名 / 提交表单的界面」。请把图中出现的每一个时间原样抽出来，并标明它出现在哪里。只输出严格 JSON 对象，不要解释、不要 markdown 代码块。
+
+输出结构：
+{"sources":[{"kind":"A","label":"活动时间","raw":"原文时间片段","date":"2026-10-20","start":"14:00","end":"17:00"}]}
+
+字段说明：
+- kind：A = 时间出现在通知正文里；B = 时间出现在表单界面里（表单卡片、"截止"标签、"最近截止"等 UI 文案）；判断不了填 "?"
+- label：这条时间是什么，尽量用原文的说法，例如"活动时间""报名时间""截止时间"
+- raw：原样抄写图中的那段时间文字。一个字都不许改：不要补年份、不要统一格式、不要改错别字、不要把"下午两点"改成"14:00"
+- date：把 raw 里的日期规范成 YYYY-MM-DD，只用于比对；raw 里没有明确日期就填空字符串
+- start / end：把时刻规范成 HH:MM，只用于比对；没有时刻就填空；只有一个时刻就只填 start
+
+规则：
+1. raw 必须逐字照抄，宁可留空也不许推测、不许补全、不许修正。
+2. 同一张图里既有通知又有表单时，按每条时间实际出现的位置分别标 A / B。
+3. 只抽时间，"截止""星期一"这类词本身不算一条时间。
+4. 最多 10 条。
+5. 图中没有任何时间时，sources 输出 []。
+
+只输出 JSON 对象。`;
+}
+
+function parseTimeJSON(text){
+  let s = String(text || "").trim()
+    .replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+  const tryParse = str => { try{ return JSON.parse(str); }catch(e){ return undefined; } };
+
+  const arrTry = () => {
+    const a = s.indexOf("["), b = s.lastIndexOf("]");
+    if(a < 0 || b <= a) return null;
+    const v = tryParse(s.slice(a, b + 1));
+    return Array.isArray(v) ? v : null;
+  };
+  const objTry = () => {
+    const a = s.indexOf("{"), b = s.lastIndexOf("}");
+    if(a < 0 || b <= a) return null;
+    const v = tryParse(s.slice(a, b + 1));
+    if(!v || typeof v !== "object" || Array.isArray(v)) return null;
+    return Array.isArray(v.sources) ? v.sources : null;
+  };
+
+  const ai = s.indexOf("["), oi = s.indexOf("{");
+  const order = (ai >= 0 && (oi < 0 || ai < oi)) ? [arrTry, objTry] : [objTry, arrTry];
+  let arr = null;
+  for(const fn of order){ const v = fn(); if(v){ arr = v; break; } }
+  if(!arr) throw new Error("这张图没读出时间，换一张更清楚的试试。");
+
+  return arr.slice(0, 10).map(it => {
+    it = it || {};
+    const raw = String(it.raw || "").trim();
+    let kind = String(it.kind || "").trim().toUpperCase();
+    if(kind !== "A" && kind !== "B") kind = "?";
+
+    let date = normDate(it.date);
+    let start = normHM(it.start);
+    let end = normHM(it.end);
+
+    // 模型没给规范值时，用原文自己兜一层（原文仍然是唯一的展示依据）
+    if(raw){
+      if(!date) date = dateFromRaw(raw);
+      if(!start){
+        const p = parseText(raw);
+        if(p.hasTime && p.due) start = hmOf(p.due);
+      }
+      if(!end) end = endFromRaw(raw);
+    }
+
+    return {
+      id: uid(), kind: kind,
+      label: String(it.label || "").trim(),
+      raw: raw, date: date, start: start, end: end
+    };
+  }).filter(s => s.raw || s.date || s.start);
+}
+
+async function qwenRecognizeTime(dataUrl){
+  const body = {
+    model: QWEN.model,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: dataUrl } },
+        { type: "text", text: timePrompt() }
+      ]
+    }],
+    max_tokens: 1000,
+    temperature: 0
+  };
+  return parseTimeJSON(await qwenVision(body));
+}
+
+/* 单对比较：A = 活动时间，B = 表单截止 */
+function comparePair(a, b){
+  if(!a || !b)
+    return { state:"unknown", note:"缺少来源A或来源B，无法比对。请把通知正文和表单界面都补齐。" };
+  if(!a.date || !b.date)
+    return { state:"unknown", note:"至少有一边没读到明确日期，无法判定，请人工核对原文。" };
+
+  const ay = a.date.slice(0,4), by = b.date.slice(0,4);
+  const amd = a.date.slice(5), bmd = b.date.slice(5);
+
+  if(a.date !== b.date){
+    if(amd === bmd && ay !== by){
+      return { state:"ok", note:`两边的月日一致（${fmtDateCn(a.date)} / ${fmtDateCn(b.date)}），只有年份不同，可能是其中一张没写年份、按今年推算出来的。暂按同一天处理，年份请人工确认。` };
+    }
+    return { state:"bad", note:`日期不一致：来源A 是 ${fmtDateCn(a.date)}，来源B 是 ${fmtDateCn(b.date)}。两个不同的日期，属于时间信息冲突。` };
+  }
+
+  const as = minOf(a.start), ae = minOf(a.end), bs = minOf(b.start);
+  const day = fmtDateCn(a.date);
+
+  if(as === null || bs === null)
+    return { state:"ok", note:`两条时间在同一天（${day}），至少有一边没写具体时刻，按同日处理，没有冲突。具体时段请人工核对。` };
+
+  const spanTxt = `${a.start}${a.end ? "-" + a.end : ""}`;
+  const nightStagger = (bs >= 20*60 && ae !== null && ae <= 18*60)
+    ? "活动在白天举办，表单截止是当天夜间，属于设计上的错开，不是错误。" : "";
+
+  if(bs < as)
+    return { state:"ok", note:`两条时间在同一天（${day}）。表单截止 ${b.start} 早于活动 ${spanTxt} 开始，属于先截止后举办，没有冲突。` };
+
+  if(bs === as)
+    return { state:"ok", note:`两条时间在同一天同一时刻（${day} ${a.start}）。时间点重合，没有冲突，但请确认是不是同一个时间被写在了两个地方。` };
+
+  if(ae !== null && bs <= ae)
+    return { state:"bad", note:`同一天（${day}），但表单截止 ${b.start} 落在活动进行中（${a.start}-${a.end}），时段逻辑矛盾，属于时间信息冲突。` };
+
+  return { state:"ok", note:`两条时间在同一天（${day}）。表单截止 ${b.start} 晚于活动 ${spanTxt}，${nightStagger || "属于设计上的错开，不是错误。"}` };
+}
+
+/* 多条来源时两两比对，只要有一对冲突就算冲突 */
+function tvVerdict(){
+  const A = tvSources.filter(s => s.kind === "A");
+  const B = tvSources.filter(s => s.kind === "B");
+  const U = tvSources.filter(s => s.kind !== "A" && s.kind !== "B");
+
+  if(!A.length && !B.length) return { state:"unknown", A, B, U, note:"还没读到任何时间。" };
+  if(!A.length) return { state:"unknown", A, B, U, note:"还没读到来源A（通知正文）里的时间，请补一张通知正文的图。" };
+  if(!B.length) return { state:"unknown", A, B, U, note:"还没读到来源B（表单界面）里的时间，请补一张表单界面的图。" };
+
+  let bad = null, first = null;
+  A.forEach(a => B.forEach(b => {
+    const r = comparePair(a, b);
+    if(!first) first = r;
+    if(r.state === "bad" && !bad) bad = r;
+  }));
+
+  const pick = bad || first;
+  return {
+    state: bad ? "bad" : (pick.state === "unknown" ? "unknown" : "ok"),
+    note: pick.note,
+    A, B, U,
+    pairs: A.length * B.length
+  };
+}
+
+function tvRowHTML(s){
+  const fixed = s.kind === "A" ? "活动时间" : s.kind === "B" ? "表单截止时间" : "时间";
+  const hint = (s.label && s.label !== fixed) ? `图中写作「${s.label}」· ` : "";
+  const norm = [s.date, [s.start, s.end].filter(Boolean).join("-")].filter(Boolean).join(" ");
+  return `<div class="tv-row">
+    <span class="tv-k">${s.kind}</span>
+    <div class="tv-c">
+      <b>${fixed}：${escapeHTML(s.raw || "（没读到原文）")}</b>
+      <span>${escapeHTML(hint)}规范化：${escapeHTML(norm || "不足")} · 仅用于比对</span>
+    </div>
+    <button class="cs-del" data-tvdel="${s.id}" aria-label="删除">×</button>
+  </div>`;
+}
+
+function openTimeSheet(){
+  $("#mask").classList.add("on");
+  $("#tSheet").classList.add("on");
+  renderTimeSheet();
+}
+
+function renderTimeSheet(){
+  const body = $("#tvBody"), foot = $("#tvFoot");
+
+  if(tvBusy && !tvSources.length){
+    $("#tTitle").textContent = "时间核对";
+    $("#tDesc").textContent = tvProg || "先把图里的时间原样读出来，再比对。";
+    body.innerHTML = `<div class="cs-loading"><i></i><i></i><i></i></div>`;
+    foot.innerHTML = "";
+    return;
+  }
+
+  if(!tvSources.length){
+    $("#tTitle").textContent = "时间核对";
+    $("#tDesc").textContent = "通知正文和表单界面的时间分开记，再比一遍对不对。";
+    body.innerHTML = `<div class="tv-empty">还没有图片。<br>先给一张活动通知正文，再补一张表单界面，也可以一次选两张。</div>`;
+    foot.innerHTML = `<button class="btn-main" id="tvAdd">选图片</button>`;
+    return;
+  }
+
+  const v = tvVerdict();
+  const cls = v.state === "bad" ? "bad" : v.state === "ok" ? "ok" : "warn";
+  const resultText = v.state === "bad" ? "存在时间冲突" : v.state === "ok" ? "无冲突" : "信息不全，暂不判定";
+
+  $("#tTitle").textContent = "时间核对";
+  $("#tDesc").textContent = tvBusy
+    ? (tvProg || "正在读…")
+    : `共 ${tvSources.length} 条时间来源${tvShots > 1 ? `，来自 ${tvShots} 张图` : ""}。原文照抄，不做修正。`;
+
+  let html = "";
+  html += `<div class="tv-sec">
+    <div class="tv-h">【来源A｜通知正文原文】<em>${v.A.length} 条</em></div>
+    ${v.A.length ? v.A.map(tvRowHTML).join("") : `<div class="tv-none">还没读到通知正文里的时间</div>`}
+  </div>`;
+  html += `<div class="tv-sec">
+    <div class="tv-h">【来源B｜表单界面标注】<em>${v.B.length} 条</em></div>
+    ${v.B.length ? v.B.map(tvRowHTML).join("") : `<div class="tv-none">还没读到表单界面上的时间</div>`}
+  </div>`;
+  if(v.U.length){
+    html += `<div class="tv-sec">
+      <div class="tv-h">【来源不明】<em>${v.U.length} 条</em></div>
+      ${v.U.map(tvRowHTML).join("")}
+    </div>`;
+  }
+
+  html += `<div class="tv-verdict ${cls}">
+    <div class="tv-vt">【冲突判定结果】：${resultText}</div>
+    <p>【说明】${escapeHTML(v.note)}</p>
+    ${v.pairs > 1 ? `<p style="margin-top:5px;opacity:.55">共 ${v.A.length} 条来源A、${v.B.length} 条来源B，已逐对比对。</p>` : ""}
+    <p class="tv-tip">只做提取、标注和判定，不替你选哪个为准。以通知正文为准还是以表单为准，请人工确认后再操作。</p>
+  </div>`;
+
+  body.innerHTML = html;
+  foot.innerHTML = tvBusy
+    ? `<div class="tv-prog"><i></i>${escapeHTML(tvProg || "正在读…")}</div>`
+    : `<div class="cs-ops">
+        <button class="ghost" id="tvClear">清空</button>
+        <button class="ok" id="tvAdd">补充图片</button>
+      </div>`;
+}
+
+async function importTimeImages(files){
+  const list = Array.from(files || []).filter(f => /^image\//.test(f.type || ""));
+  if(!list.length){ toast("只支持图片文件"); return; }
+
+  const imgs = [];
+  for(const f of list){
+    try{ imgs.push(await compressImage(f, 1500, 0.85)); }catch(e){}
+  }
+  if(!imgs.length){ toast("这些图都打不开，换几张试试？"); return; }
+
+  const begin = tvShots;
+  tvBusy = true; tvProg = ""; openTimeSheet();
+
+  const errs = [];
+  for(let i = 0; i < imgs.length; i++){
+    tvProg = `正在读第 ${begin + i + 1} 张（共 ${begin + imgs.length} 张）`;
+    renderTimeSheet();
+    try{
+      const r = await qwenRecognizeTime(imgs[i]);
+      tvShots++;
+      if(r.length) tvSources = tvSources.concat(r);
+      else errs.push(`第 ${begin + i + 1} 张没读到时间`);
+    }catch(err){
+      errs.push((err && err.message) || `第 ${begin + i + 1} 张没读出来`);
+    }
+  }
+
+  tvBusy = false; tvProg = "";
+  renderTimeSheet();
+
+  if(!tvSources.length){
+    closeSheet();
+    toast(errs[0] || "没读到时间，换张清楚的试试");
+    return;
+  }
+  if(errs.length) toast(errs[0]);
+}
+
 /* 图片入口：桌面（无触摸）直接开文件选择，其余走「拍照 / 相册」菜单 */
 function isTouch(){
   return ("ontouchstart" in window) || (navigator.maxTouchPoints > 0);
 }
-let pickCourse = false;   // 这次图片入口是「记事项」还是「录课表」
-function openImageEntry(forCourse){
-  pickCourse = !!forCourse;
+let pickMode = "task";   // 这次图片入口干什么：task 记事项 / course 录课表 / time 时间核对
+function openImageEntry(mode){
+  pickMode = (mode === "course" || mode === "time") ? mode : "task";
   const camRow = document.querySelector('[data-pick="camera"]');
   const ttl = document.querySelector(".pk-title");
-  if(ttl) ttl.textContent = pickCourse ? "导入课表 · 可多选" : "添加通知截图";
+  if(ttl) ttl.textContent = pickMode === "course" ? "导入课表 · 可多选"
+                        : pickMode === "time"   ? "时间核对 · 可多选"
+                        : "添加通知截图";
   const al = $("#pkAlbumLabel");
-  if(al) al.textContent = pickCourse ? "从相册选择（可多选）" : "从相册选择";
+  if(al) al.textContent = pickMode === "task" ? "从相册选择" : "从相册选择（可多选）";
+  const em = document.querySelector('[data-pick="album"] em');
+  if(em) em.textContent = pickMode === "time" ? "通知正文、表单界面各一张"
+                        : pickMode === "course" ? "课程表、作息表都可以"
+                        : "微信截图、群通知、教务系统截图";
   if(isDesktop() && !isTouch()){
     const gal = $("#galInput");
     if(gal){ gal.value = ""; gal.click(); }
@@ -2754,8 +3152,12 @@ function closeSheet(){
   if(rs) rs.classList.remove("on");
   const cs = $("#cSheet");
   if(cs) cs.classList.remove("on");
+  const ts = $("#tSheet");
+  if(ts) ts.classList.remove("on");
   csDraft = null; csBusy = false; csProg = "";
   csPeriods = {}; csShots = 0;
+  // 时间核对的来源保留在内存里，关掉再打开还能接着补图
+  tvBusy = false; tvProg = "";
   editId = null;
   if(draft){ draft = null; document.documentElement.dataset.theme = db.profile.theme; }
 }
@@ -2846,6 +3248,30 @@ $("#rDel").addEventListener("click", ()=>{
   toast("已删除");
 });
 
+/* ================= 时间核对事件 ================= */
+$("#tClose").addEventListener("click", closeSheet);
+if($("#tvChip")) $("#tvChip").addEventListener("click", openTimeSheet);
+
+$("#tSheet").addEventListener("click", e=>{
+  const del = e.target.closest("[data-tvdel]");
+  if(del){
+    tvSources = tvSources.filter(x => x.id !== del.dataset.tvdel);
+    renderTimeSheet();
+    return;
+  }
+  if(e.target.closest("#tvAdd")){
+    // 不关面板，直接继续选图；新图的结果追加到已有来源后面
+    openImageEntry("time");
+    return;
+  }
+  if(e.target.closest("#tvClear")){
+    if(!confirm("清空这次核对的所有来源？")) return;
+    tvSources = []; tvShots = 0;
+    renderTimeSheet();
+    toast("已清空");
+  }
+});
+
 /* ================= 课表事件 ================= */
 $("#cClose").addEventListener("click", closeSheet);
 
@@ -2871,12 +3297,12 @@ $("#cSheet").addEventListener("click", e=>{
   if(e.target.closest("#csSave")){ saveCourses(); return; }
   if(e.target.closest("#csMore")){
     // 不关面板，直接再选图；认完追加到当前草稿
-    openImageEntry(true);
+    openImageEntry("course");
     return;
   }
   if(e.target.closest("#csImport")){
     closeSheet();
-    setTimeout(()=> openImageEntry(true), 200);
+    setTimeout(()=> openImageEntry("course"), 200);
     return;
   }
   if(e.target.closest("#csClear")){
@@ -2985,7 +3411,7 @@ $("#picker").addEventListener("click", e=>{ if(e.target === $("#picker")) closeP
     // 先把 FileList 拷成数组：清空 value 会连带把 files 清掉
     const fs = Array.from(e.target.files || []);
     e.target.value = "";
-    if(fs.length) handleImage(fs, pickCourse ? "course" : "task");
+    if(fs.length) handleImage(fs, pickMode);
   });
 });
 
@@ -3068,7 +3494,7 @@ function seed(){
   save();
 }
 /* 版本戳：判断浏览器加载的是不是最新版 */
-const APP_VER = "v0.6.0 · 2026-11-13";
+const APP_VER = "v0.7.0 · 2026-11-27";
 (function(){
   const el = $("#verLine");
   if(el) el.textContent = APP_VER + " · 对话 " + QWEN_TEXT.primary;
