@@ -781,6 +781,10 @@ html[data-theme="aurora"] .app::after{content:none}
   #cSheet{left:50%;right:auto;width:min(560px,90vw);transform:translate(-50%,102%)}
   #cSheet.on{transform:translate(-50%,0)}
 
+  /* 时间核对面板同样收窄居中 */
+  #tSheet{left:50%;right:auto;width:min(620px,92vw);transform:translate(-50%,102%)}
+  #tSheet.on{transform:translate(-50%,0)}
+
   /* ---------- 主题：糖果 ---------- */
   [data-theme="candy"] .sidebar{
     background:rgba(255,255,255,.62);border-right:1.5px solid rgba(35,31,28,.09);
@@ -2788,8 +2792,14 @@ function minOf(t){
 }
 /* 从原文里取时段的后半段，例如 14:00-17:00 的 17:00 */
 function endFromRaw(raw){
-  const m = String(raw || "").match(/(\d{1,2})\s*[:：]\s*(\d{2})\s*[-–—~～至到]+\s*(\d{1,2})\s*[:：]\s*(\d{2})/);
-  return m ? pad(+m[3]) + ":" + m[4] : "";
+  const s = String(raw || "");
+  const m = s.match(/(\d{1,2})\s*[:：]\s*(\d{2})\s*[-–—~～至到]+\s*(\d{1,2})\s*[:：]\s*(\d{2})/);
+  if(!m) return "";
+  // "下午 2:00-5:00" 里的 5:00 其实是 17:00，按前面的时段词补 12 小时
+  let eh = +m[3];
+  if(/(下午|晚上|傍晚)/.test(s) && eh < 12) eh += 12;
+  if(/凌晨/.test(s) && eh === 12) eh = 0;
+  return pad(eh) + ":" + m[4];
 }
 /* 从原文兜底取日期：只补「今年」，不往后一年滚。
    核对场景里宁可年份存疑（后面会被年份不一致的提示兜住），也不要替用户推测。 */
