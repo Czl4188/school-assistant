@@ -1697,20 +1697,22 @@ function coursePrompt(){
 courses 每一项只有 4 个字段：
 - title：课程名称，照原文写。只写课程名，不要把节次、周次、教室、老师拼进去
 - weekday：星期几，统一写成「周一」「周二」…「周日」。表头是「星期一」就归一成「周一」
-- time：这门课的时间，照原文抄。有具体时刻就抄（"08:00-09:40"）；只有节次就抄节次
-（"第1-2节"）；两样都有就都写（"第1-2节 08:00-09:40"）
-- teacher：任课老师姓名，只填姓名。图上没写就填空字符串 ""
+- time：这门课的时间，照原文抄。有具体时刻就抄时刻（"08:00-09:40"）；只有节次就抄节次
+  （"第1-2节"）；两样都有就都写（"第1-2节 08:00-09:40"）。不要输出 teacher 字段
+- room：上课地点，照原文写，保留校区和教室号，例如"本部 10-309""三教 205"；
+  图上没写就填空字符串 ""
 
 periods 每一项（只在作息时间表里）：from / to / start / end，例：
 "第1-2节 08:00-09:40" → from:1,to:2,start:"08:00",end:"09:40"
 
 规则：
 1. 一格 = 一节课。合并单元格也只输出一条，不要拆成重复多条。
-2. 斜杠长串「高等数学I/(3-3节)3-18周/本部 10-309/刘文斌」只取第一段当 title，
-老师那段填 teacher；教室、周次、学时一律丢掉，不要写进任何字段。
-3. teacher 只抄图上真实出现的姓名。看不到就留空，不许猜、不许编、不许写"未知"。
+2. 斜杠长串「高等数学I/(3-3节)3-18周/本部 10-309/刘文斌」只取第一段当 title；
+   带数字、带楼栋/教室号的那段填 room（"本部 10-309" 整段保留，别只留房间号）；
+   老师名、周次、学时学分一律丢掉，不要写进任何字段。
+3. room 只抄图上出现的教室，不许根据课程猜、不许编"待定""教室待补"。
 4. 这些不是课程：第一、二节课 / 课间休息 / 午餐、午休 / 预备铃 / 早操 / 宿舍关门 /
-备注，以及"节次""星期""课程"这类表头。它们只能进 periods。
+   备注，以及"节次""星期""课程"这类表头。它们只能进 periods。
 5. 只有课程表 → periods 输出 []；只有作息表 → courses 输出 []。
 6. 认不准的格子直接跳过。宁可少一条，不要造一条。
 7. courses 最多 40 条，periods 最多 20 条。
@@ -1720,7 +1722,8 @@ periods 每一项（只在作息时间表里）：from / to / start / end，例�
 
 /* 一格可能是斜杠分隔的一长串：「高等数学I/(3-3节)3-18周/本部 10-309/刘文斌/64/4.0」
    按段拆：第1段课程名，带"节"的是节次，带"周"的是周次，纯数字是学时/学分，
-   带数字的是地点，2-4 个汉字的当老师名。拆不出来就返回 null，交给上层走原逻辑。 */
+   带数字的是地点。纯汉字段（多半是老师名）直接丢掉——识别阶段不再产出 teacher，
+   教师只在编辑表单里手填。拆不出来就返回 null，交给上层走原逻辑。 */
 function splitCellFields(text){
   const raw = String(text || "").trim();
   if(raw.indexOf("/") < 0 && raw.indexOf("／") < 0) return null;
@@ -1758,10 +1761,9 @@ function splitCellFields(text){
       nums.push(parseFloat(rest));
     }else if(/\d/.test(rest)){
       out.room = out.room ? out.room + " " + rest : rest;
-    }else if(/^[\u4e00-\u9fa5·]{2,4}$/.test(rest)){
-      if(!out.teacher) out.teacher = rest;
-      else out.note = out.note ? out.note + " " + rest : rest;
     }
+    // 纯汉字段（多半是老师名）到此就丢了：契约里不再要 teacher，
+    // 硬塞进 out.teacher 只会制造「假老师」，教师留给编辑表单手填
   });
 
   if(nums.length >= 1) out.hours = Math.round(nums[0]);
@@ -1845,9 +1847,9 @@ function parseCourseJSON(text){
         note = note.replace(mt2[0], "").replace(/^[，,、;；\s]+/, "").trim();
       }
     }
-    if(!teacher && cell) teacher = cell.teacher;
-    // 新契约只要 title / weekday / time / teacher：教室、周次、学时一律不写进任何字段，
-    // 所以这里不再从斜杠串兜底填 note / room / hours / credit
+    // 新契约是 title / weekday / time / room：教师不再问模型（分裂段也不再产出），
+    // teacher 只可能来自老格式残留，或者用户在编辑表单里手填
+    // 周次、学时一律不写进任何字段，所以这里不再从斜杠串兜底填 note / hours / credit
 
     const hours = parseInt(it.hours, 10) || 0;
     const credit = parseFloat(it.credit) || 0;
@@ -1855,8 +1857,8 @@ function parseCourseJSON(text){
     return {
       title: (cell ? cell.title : String(it.title || "").trim()) || "未命名课程",
       teacher: teacher,
-      // 提示词只要求 4 个字段，不再逼模型给教室；但斜杠格本地能拆出来就保留，
-      // 不然「今日课程」卡片上没有上课地点
+      // 教室是契约里的字段；模型没给时用斜杠格的拆分结果兜底，
+      // 这样「今日课程」卡片上不至于没有上课地点
       room: String(it.room || "").trim() || (cell ? cell.room : ""),
       note: note,
       hours: hours,
@@ -1901,10 +1903,10 @@ async function qwenRecognizeCourse(dataUrl){
   return parseCourseJSON(await qwenVision(body));
 }
 
-/* ---- 老师补认 ----
-   老师是最容易丢的字段：模型第一遍常把它当备注省略掉。所以第一遍认完
-   只要还有课缺老师，就带着原图再问一次，这次只让它补老师、按序号对齐。
-   补不回来的一律留空，绝不让模型编名字——宁可显示「老师待补」。
+/* ---- 老师补认（已停用）----
+   契约从 teacher 换成 room 之后，识别阶段不再要老师，importCourseImages() 也不再调这里。
+   函数先留着：教师字段还在数据模型里，将来若要恢复「自动认老师」可以直接接回去。
+   现在它没有任何调用点，改这里不会影响课表导入。
 */
 function teacherPrompt(list){
   const rows = list.map((c, i) => {
@@ -2051,7 +2053,8 @@ function nearest(){
 
 /* ================= 课表 =================
    一条课：{ id, title, teacher, date, weekday, start, end, room, note, hours, credit, pf, pt }
-   - teacher 是独立字段，不是 note 的一部分；识别不到就留空，界面上显示「老师待补」
+   - teacher 是独立字段，不是 note 的一部分；识别阶段不再自动产出，只在编辑表单里手填
+   - room 是识别阶段要的字段；没有教室的行标橙提醒用户补，空白不显示占位文案
    - hours / credit 是总学时和学分，图里写了就存，没写就是 0
    - weekday 0-6（0 是周日），一定有，用来排周表
    - date 只在图里写了具体日期（11月16日 / 2026-11-16）时才存，
@@ -2430,7 +2433,7 @@ function courseCardHTML(){
       <div class="cls-v"></div>
       <div class="cls-m">
         <b>${escapeHTML(c.title)}</b>
-        <span>${escapeHTML([c.teacher, c.room].filter(Boolean).join(" · ") || "老师待补")}</span>
+        <span>${escapeHTML([c.teacher, c.room].filter(Boolean).join(" · ") || "待补")}</span>
       </div>
     </div>`;
   }).join("");
@@ -3180,7 +3183,7 @@ function settleDraft(){
 /* ================= 课表行内编辑 =================
    同一时间只允许一行处于编辑态。csEdit 里存的是表单的「草稿值」：
    输入时只更新这个对象、不重绘，否则每敲一个字都会丢焦点。 */
-let csEdit = null;   // { mode:"draft"|"saved", key, title, teacher, weekday, start, end }
+let csEdit = null;   // { mode:"draft"|"saved", key, title, teacher, weekday, room, start, end }
 
 function isHHMM(v){
   return /^([01]\d|2[0-3]):[0-5]\d$/.test(String(v || ""));
@@ -3209,7 +3212,10 @@ function courseEditHTML(delAttr){
     </label>
     <div class="cs-f"><i>星期</i><div class="cs-wd">${wdBtns}</div></div>
     <label class="cs-f"><i>教师</i>
-      <input class="field" data-edit-f="teacher" maxlength="12" value="${escapeHTML(e.teacher)}" placeholder="不填就显示「老师待补」">
+      <input class="field" data-edit-f="teacher" maxlength="12" value="${escapeHTML(e.teacher)}" placeholder="可选，例如 刘文斌">
+    </label>
+    <label class="cs-f"><i>教室</i>
+      <input class="field" data-edit-f="room" maxlength="20" value="${escapeHTML(e.room)}" placeholder="例如 三教 205">
     </label>
     <div class="cs-f"><i>时间</i>
       <div class="cs-timeline">
@@ -3234,6 +3240,7 @@ function openCourseEdit(mode, key){
     title: c.title || "",
     teacher: c.teacher || "",
     weekday: c.weekday == null ? new Date().getDay() : c.weekday,
+    room: c.room || "",
     start: c.start || "",
     end: c.end || ""
   };
@@ -3264,13 +3271,14 @@ function commitCourseEdit(){
   const e = csEdit;
   const title = String(e.title || "").trim();
   const teacher = String(e.teacher || "").trim();
+  const room = String(e.room || "").trim();
   const start = e.start || "";
   const end = e.end || "";
 
   if(e.mode === "draft"){
     const c = csDraft && csDraft[+e.key];
     if(c){
-      c.title = title; c.teacher = teacher; c.weekday = e.weekday;
+      c.title = title; c.teacher = teacher; c.weekday = e.weekday; c.room = room;
       c.start = start; c.end = end;
       // 手改过时间就清掉节次：不清的话 settleDraft() 会按作息表把时刻换算回去
       c.pf = 0; c.pt = 0; c.fixS = true; c.fixE = true;
@@ -3283,7 +3291,7 @@ function commitCourseEdit(){
   const c = db.courses.find(x => x.id === e.key);
   csEdit = null;
   if(!c){ renderCourseSheet(); return; }
-  c.title = title; c.teacher = teacher; c.weekday = e.weekday;
+  c.title = title; c.teacher = teacher; c.weekday = e.weekday; c.room = room;
   c.start = start; c.end = end;
   // 清 pf/pt + 置 fixS/fixE：否则作息表会把用户手填的时刻盖掉
   c.pf = 0; c.pt = 0; c.fixS = true; c.fixE = true;
@@ -3312,11 +3320,11 @@ function renderCourseSheet(){
     const head = parts.length ? parts.join(" · ") + "。" : "";
 
     $("#cTitle").textContent = `认到 ${csDraft.length} 节课`;
-    const noT = csDraft.filter(c => !c.teacher).length;
+    const noR = csDraft.filter(c => !c.room).length;
     $("#cDesc").textContent = csBusy
       ? (csProg || "继续认…")
-      : head + (noT
-          ? `有 ${noT} 节课没认出老师（标橙了），能补的调大图再加一张，补不到就留「老师待补」。`
+      : head + (noR
+          ? `有 ${noR} 节课没认出教室（标橙了），要补就直接点这一行改。`
           : "确认没问题就存进课表；认错的点右边 × 去掉。");
 
     body.innerHTML = csDraft.map((c, i) => {
@@ -3324,12 +3332,13 @@ function renderCourseSheet(){
       if(csEdit && csEdit.mode === "draft" && +csEdit.key === i)
         return courseEditHTML(`data-cdrop="${i}"`);
       const ct = courseTime(c);
-      // 教室不是必填字段了，有才显示，别每行都挂个「教室待补」
-      const meta = ["周" + WD_CN[c.weekday], c.teacher || "老师待补"];
+      // 教室才是要补的字段：没认出教室才标橙；老师现在默认就没有，不算缺失
+      const meta = ["周" + WD_CN[c.weekday]];
+      if(c.teacher) meta.push(c.teacher);
       if(c.room) meta.push(c.room);
       // 只有“11月16日”这种具体日期才额外显示，别把“周一”重复一遍
       if(/\d/.test(c.rawDate || "")) meta.push(c.rawDate);
-      return `<div class="cs-it${c.teacher ? "" : " cs-it-warn"}" data-drow="${i}">
+      return `<div class="cs-it${c.room ? "" : " cs-it-warn"}" data-drow="${i}">
         <div class="cs-time"><b>${ct.a}</b><span>${ct.b}</span></div>
         <div class="cs-main"><b>${escapeHTML(c.title)}</b><span>${escapeHTML(meta.join(" · "))}</span></div>
         <button class="cs-del" data-cdrop="${i}" aria-label="去掉">×</button>
@@ -3366,12 +3375,13 @@ function renderCourseSheet(){
           if(csEdit && csEdit.mode === "saved" && csEdit.key === c.id)
             return courseEditHTML(`data-cdel="${c.id}"`);
           const ct = courseTime(c);
-          const meta = [c.teacher || "老师待补"];
+          const meta = [];
+          if(c.teacher) meta.push(c.teacher);
           if(c.room) meta.push(c.room);
           if(c.hours) meta.push(c.hours + "学时");
           if(c.date) meta.push(mdText(c.date));
           if(c.note) meta.push(c.note);
-          return `<div class="cs-it${c.teacher ? "" : " cs-it-warn"}" data-srow="${c.id}">
+          return `<div class="cs-it${c.room ? "" : " cs-it-warn"}" data-srow="${c.id}">
             <div class="cs-time"><b>${ct.a}</b><span>${ct.b}</span></div>
             <div class="cs-main"><b>${escapeHTML(c.title)}</b><span>${escapeHTML(meta.join(" · "))}</span></div>
             <button class="cs-del" data-cdel="${c.id}" aria-label="删除">×</button>
@@ -3451,13 +3461,8 @@ async function importCourseImages(files){
     }
   }
 
-  // 缺老师的再补认一轮：带着原图只问老师，补不回来就留空，不编
-  if(csDraft && csDraft.some(c => !c.teacher)){
-    csProg = "有课没认到老师，正在对着图再认一遍…";
-    renderCourseSheet();
-    await supplementTeachers(csDraft, imgs);
-  }
-
+  // 老师不再自动识别（契约里换成了教室），所以这里不再补认老师：
+  // 每张课表都多打一次识图请求，既慢又补不回来，教师留给编辑表单手填
   csBusy = false; csProg = "";
   renderCourseSheet();
 
@@ -4137,6 +4142,8 @@ $("#cSheet").addEventListener("input", e=>{
     csEdit.title = f.value;
   }else if(k === "teacher"){
     csEdit.teacher = f.value;
+  }else if(k === "room"){
+    csEdit.room = f.value;
   }
   syncEditSave();
 });
