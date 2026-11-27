@@ -1348,31 +1348,35 @@ function visionPrompt(){
 
 这张图里可能同时有「通知正文」和「报名表单界面」两部分，请分开看。
 
-【铁律：时间只能来自通知正文】
-1. raw_time 只能抄通知正文里白纸黑字写出来的时间，原样抄：不改写、不统一格式、不补年份、不换算。
-2. 表单界面上显示的时间（表单卡片、"最近截止"标签、提交按钮旁的时间等）不是通知规定的截止时间，只能填进 form_time，绝对不能写进 raw_time。
-3. 通知正文没写时间的事项，raw_time 必须填空字符串；time_state 按下面字段说明在 "none" 和 "unclear" 里选。不要用表单上的时间去补，也不要自己推算一个。
-4. 原文提了时间但没认准（模糊、残缺、被裁掉）时，time_state 填 "unclear"。
+【第一原则：一件事只输出一条】
+1. 按「事情」输出，不要按"活动 / 报名"拆成两条。报名方式、报名截止、要带什么、注意事项，全部写进这条事项的 note。
+2. 例：献血通知只输出一条「无偿献血活动」，note 写"校医院一楼；扫描二维码报名；需带身份证"。
+3. 只有当整张图只讲报名、完全没有活动主体时，才输出一条报名类事项。
+
+【第二原则：时间只能来自通知正文，且只取事项本身的执行时间】
+1. raw_time 只抄通知正文里写明的活动 / 会议 / 考试 / 作业截止时间，原样抄：不改写、不统一格式、不补年份、不换算。
+2. 报名时间、报名截止时间不作为任何事项的主时间。原文如果写了报名截止，写进 note 的文字里，不要放进 raw_time。
+3. 表单界面上显示的时间（表单卡片、"最近截止"标签、提交按钮旁的时间）不是通知规定的截止时间，只能填进 form_time，绝对不能写进 raw_time。
+4. 通知正文没写时间的事项，raw_time 必须填空字符串；time_state 按下面字段说明在 "none" 和 "unclear" 里选。
+5. 原文提了时间但没认准（模糊、残缺、被裁掉）时，time_state 填 "unclear"。
 
 只输出严格 JSON 数组，不要解释、不要 markdown 代码块。
 
 每一项的字段：
-- title：事项简称，20 字以内，用通知里的核心名词，例如"数学建模国赛报名"
+- title：事项简称，20 字以内，用通知里的核心名词
 - raw_time：通知正文里的时间原文；没有就填空字符串
 - time_state："stated" 原文明确写了时间 / "unclear" 本该有时间但原文没写清 / "none" 这条本来就没有时间要求
-  · "none" 的例子：只说"扫码报名"，通篇没提报名截止 → none
-  · "unclear" 的例子：只说"献血后身体不适可申请病假"，没说什么时候前申请 → unclear
   · 拿不准时选 "unclear"，不要选 "stated"
 - form_time：表单界面上显示的时间原文，只作参考；没有就填空字符串
 - kind：从 作业 / 竞赛 / 考试 / 活动 / 其他 中选一个
 - note：要带什么、怎么报名、注意事项，一句话；没有就填空字符串
 
 规则：
-1. 同一件事有多个时间节点（报名截止、活动开始、提交截止）时，拆成多条。
+1. 一件事只输出一条，不要因为出现"报名截止"就多拆一条。
 2. 只抽真正的时间节点，不要抽"各班级""联系人"这类内容。
 3. 通知里提到的事项，即使一个时间都没有，也要单独输出一条：raw_time 留空，time_state 按上面说明选 "none" 或 "unclear"。
 4. 不要为了凑出时间而编造条目，也不要给没写时间的条目安一个时间。
-5. form_time 只填在它直接相关的那条事项上（通常是报名 / 提交），同一张表单的截止时间不要重复挂到活动条目。
+5. form_time 只填在它直接相关的那条事项上，同一张表单的截止时间不要重复挂到别的条目。
 6. 最多 8 条。
 
 只输出 JSON 数组。`;
@@ -1388,9 +1392,16 @@ function qwenError(code, msg){
   return "识别没成功：" + (msg || c || "未知错误");
 }
 
+/* 报名类事项是否一律不设主时间。
+   当前为 true：只显示活动时间，报名时间（含原文里的报名截止）不展示、不入库为准。
+   改成 false 可恢复"报名截止当作正常截止时间记录"。 */
+const SIGNUP_NO_TIME = true;
+
 /* 解析识图结果。本地这一层是红线：
-   只有 time_state === "stated" 才允许把 raw_time 变成主时间；
-   form_time 永远不进 due，最多作为备注附在后面。 */
+   1) 只有 time_state === "stated" 才允许把 raw_time 变成主时间；
+   2) 报名类事项一律不设时间（SIGNUP_NO_TIME）；
+   3) form_time 永远不进 due，也不展示——字段保留只是给模型一个专门的口袋，
+      免得它把表单时间塞进 raw_time。 */
 function parseVisionJSON(text){
   let s = String(text || "").trim()
     .replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
@@ -1407,6 +1418,8 @@ function parseVisionJSON(text){
     const title = String(it.title || "").trim() || "未命名事项";
     const raw = String(it.raw_time || "").trim();
     const formRaw = String(it.form_time || "").trim();
+    // 模型常把标签一起抄进来（"最近截止 11月30日 23:59"），去掉前缀只留时间
+    const formTxt = formRaw.replace(/^(最近)?(报名|提交)?截止(时间|日期)?\s*[:：]?\s*/, "").trim() || formRaw;
     let note = String(it.note || "").trim();
 
     // 状态：优先采信模型给的；没给就按 raw_time 是否有值推断
@@ -1425,12 +1438,22 @@ function parseVisionJSON(text){
       }
     }
 
-    // 红线二：表单时间只进备注，永远不进 due
-    if(formRaw) note += `（表单界面显示截止：${formRaw}，仅作参考）`;
+    // 红线二：报名类事项一律不设主时间，界面上也不出现报名时间。
+    // 报名信息（怎么报、要带什么）留在 note 里，时间不展示、不进 due、不进周历。
+    // 想恢复"报名截止也记时间"，把 SIGNUP_NO_TIME 改成 false 即可。
+    const isSignup = SIGNUP_NO_TIME && /报名/.test(title);
+    if(isSignup){
+      state = "none";
+      due = null;
+    }
+
+    // 红线三：表单时间不展示、也不进 due。界面上只出现活动时间。
+    // form_time 这个字段仍然保留在提示词里：给模型一个"专门放表单时间"的口袋，
+    // 它才不会把表单时间塞进 raw_time。
 
     // 状态说"没有"，但模型又给了原文时间：不当主时间，只保留在备注里
     // （跟表单时间同一个值就不重复写了）
-    if(state === "none" && raw && raw !== formRaw) note += `（原文另有时间「${raw}」，未作主时间）`;
+    if(!isSignup && state === "none" && raw && raw !== formTxt) note += `（原文另有时间「${raw}」，未作主时间）`;
 
     let kind = OK.indexOf(it.kind) >= 0 ? it.kind : "";
     if(!kind){
@@ -3752,7 +3775,7 @@ function seed(){
   save();
 }
 /* 版本戳：判断浏览器加载的是不是最新版 */
-const APP_VER = "v0.8.0 · 2026-11-27";
+const APP_VER = "v0.8.1 · 2026-11-27";
 (function(){
   const el = $("#verLine");
   if(el) el.textContent = APP_VER + " · 对话 " + QWEN_TEXT.primary;
