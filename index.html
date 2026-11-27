@@ -1965,6 +1965,83 @@ function todayCourses(){
     .filter(c => c.date ? startOfDay(new Date(c.date)).getTime() === t0 : c.weekday === wd)
     .sort(byStart);
 }
+
+/* 指定某天的课：写过具体日期的按日期匹配，只写"周一"的按星期匹配 */
+function coursesAt(d){
+  const t0 = startOfDay(d).getTime();
+  const wd = d.getDay();
+  return (db.courses || [])
+    .filter(c => c.date ? startOfDay(new Date(c.date)).getTime() === t0 : c.weekday === wd)
+    .sort(byStart);
+}
+
+/* 本地兜底用：问"在哪办 / 要带什么"时，从待办的备注里找答案 */
+function noteAnswerLocal(t){
+  if(!/(在哪|哪里|地点|地址|带什么|要带|怎么报名|报名方式|在哪儿)/.test(t)) return "";
+  const cands = (db.records || []).filter(r => !r.done && r.note);
+  if(!cands.length) return "";
+  const hit = cands.find(r=>{
+    const s = String(r.title || "");
+    for(let i = 0; i < s.length - 1; i++){
+      if(t.includes(s.slice(i, i + 2))) return true;
+    }
+    return false;
+  }) || (cands.length === 1 ? cands[0] : null);
+  if(!hit) return "";
+  return `${hit.title}：${hit.note}`;
+}
+
+/* 本地兜底用：模型连不上时也能回答"今天/明天/周三有什么课" */
+function courseAnswerLocal(t){
+  const now = new Date();
+  let off = null;
+  if(/今天|今日/.test(t)) off = 0;
+  else if(/明天|明日/.test(t)) off = 1;
+  else{
+    const m = t.match(/(?:周|星期)([一二三四五六日天])/);
+    if(m){
+      const target = WEEK[m[1]];
+      for(let k = 0; k < 8; k++){
+        const d = new Date(now); d.setDate(d.getDate() + k);
+        if(d.getDay() === target){ off = k; break; }
+      }
+    }
+  }
+  if(off === null) return "";
+  const d = new Date(now); d.setDate(d.getDate() + off);
+  const list = coursesAt(d);
+  const label = off === 0 ? "今天" : off === 1 ? "明天" : "周" + WD_CN[d.getDay()];
+  if(!list.length) return `${label}没课。`;
+  return `${label}有 ${list.length} 节：\n` + list.map(c=>{
+    const ct = courseTime(c);
+    const span = ct.b ? `${ct.a}-${ct.b}` : ct.a;
+    return `· ${span} ${c.title}${c.room ? "（" + c.room + "）" : ""}`;
+  }).join("\n");
+}
+
+/* 喂给大模型的课程上下文：未来 7 天，够回答"今天/明天/周三有什么课"，
+   又不至于把整张课表塞进提示词。超出 7 天的，模型会直说看不到。 */
+function courseSnapshot(){
+  if(!Array.isArray(db.courses) || !db.courses.length) return "";
+  const now = new Date();
+  const out = [];
+  for(let off = 0; off < 7; off++){
+    const d = new Date(now);
+    d.setDate(d.getDate() + off);
+    const list = coursesAt(d);
+    const label = off === 0 ? "今天" : off === 1 ? "明天" : "周" + WD_CN[d.getDay()];
+    const dateStr = `${d.getMonth()+1}/${d.getDate()}`;
+    if(!list.length){ out.push(`${label}（${dateStr}）：没课`); continue; }
+    const txt = list.map(c=>{
+      const t = courseTime(c);
+      const extra = [c.room, c.teacher].filter(Boolean).join(" · ");
+      const span = t.b ? `${t.a}-${t.b}` : t.a;
+      return `${span} ${c.title}${extra ? "（" + extra + "）" : ""}`;
+    }).join("；");
+    out.push(`${label}（${dateStr}）：${txt}`);
+  }
+  return out.join("\n");
+}
 function mdText(ts){
   const d = new Date(ts);
   return `${d.getMonth()+1}/${d.getDate()}`;
@@ -2342,6 +2419,15 @@ function replyLocal(text){
     }
   }
 
+  // 问课程表：优先按课表回答，别掉进"最近有什么"的分支
+  if(/(什么课|有课吗|有课么|哪节课|几点上课|在哪上课|哪个教室|老师是谁|谁教)/.test(t)){
+    const ca = courseAnswerLocal(t);
+    if(ca) return ca;
+  }
+
+  // 打招呼
+  if(/^(你好|您好|hi|hello|嗨|在吗|在么)\s*[!！。.]*$/i.test(t)) return `在的，${call}，有什么事？`;
+
   // 查询
   const askNear = /(最近|接下来|有什么|哪些|有没有|几件|几项|还剩|还要|还有哪些|ddl|deadline)/i.test(t);
   const askWeek = /(这周|本周|一周|七天)/.test(t);
@@ -2376,9 +2462,14 @@ function replyLocal(text){
   // 录入
   const p = parseText(t);
 
-  // 兜底也不要把问候/提问记成待办
+  // 兜底也不要把问候/提问记成待办：只要像提问、又不是明确让我记，就不入库
+  const explicitRecord = /(记一下|记下|帮我记|帮我记录|提醒我|备忘|别忘)/.test(t);
   if(isDateTimeQuestion(t)) return dateTimeAnswer();
-  if(looksLikeQuestion(t) && !p.due){
+  if(looksLikeQuestion(t) && !explicitRecord){
+    const ca = /(课|上课|教室|老师)/.test(t) ? courseAnswerLocal(t) : "";
+    if(ca) return ca;
+    const nd = noteAnswerLocal(t);
+    if(nd) return nd;
     return `我在的，${call}。想记事情就带上时间，比如「11月15日 23:59 建模报名」；想问什么也直接说。`;
   }
   // 既不像正经事、也没有明确时间点（"我是你老公""今天好累啊"），绝不写进记事本
@@ -2419,6 +2510,11 @@ const WMO = {
 
 function snapshotList(){ return upcoming().slice(0, 20); }
 
+function noteBrief(s){
+  s = String(s || "").replace(/\s+/g, " ").trim();
+  return s.length > 40 ? s.slice(0, 40) + "…" : s;
+}
+
 function snapshotText(list){
   if(!list.length) return "（空）";
   return list.map((r,i)=>{
@@ -2427,7 +2523,8 @@ function snapshotText(list){
       const d = dayDiff(r.due);
       left = d < 0 ? `已逾期${-d}天` : d === 0 ? "今天到期" : `还剩${d}天`;
     }
-    return `${i+1}. ${r.title} | ${r.due ? fmtDue(r.due) : "待补"} | ${r.kind || "其他"} | ${left}`;
+    const nb = noteBrief(r.note);
+    return `${i+1}. ${r.title} | ${r.due ? fmtDue(r.due) : "待补"} | ${r.kind || "其他"} | ${left}` + (nb ? ` | 备注：${nb}` : "");
   }).join("\n");
 }
 
@@ -2435,6 +2532,7 @@ function buildSysPrompt(list, hint){
   const t = new Date();
   const wl = ["日","一","二","三","四","五","六"];
   const call = db.profile.call || "总裁";
+  const cs = courseSnapshot();
   return `你是「校园助理」，学生的私人截止日期管家。称呼用户为「${call}」。
 
 【现在】${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())} 周${wl[t.getDay()]} ${pad(t.getHours())}:${pad(t.getMinutes())}
@@ -2442,12 +2540,15 @@ function buildSysPrompt(list, hint){
 【记事本快照】
 ${snapshotText(list)}
 
+【课程】（未来 7 天；问更远的日子就说课表里看不到）
+${cs || "（还没导入课表）"}
+
 【判断意图】只输出一个 JSON 对象，不要代码块、不要任何解释：
 {"intent":"...","reply":"...","items":[],"done_indexes":[],"city":""}
 
 intent 取值：
 - record：用户给出需要记录的截止信息（作业 / 竞赛 / 考试 / 活动）
-- query：用户在问自己的事（最近有什么、这周几件、某门课有什么）
+- query：用户在问自己的事（最近有什么、这周几件、某门课有什么、今天/明天有什么课、在哪上课、要带什么）
 - complete：用户说某件事做完了 / 交了
 - weather：问天气
 - chat：其它一切（闲聊、问时间、问你是谁、吐槽、求鼓励）
@@ -2457,6 +2558,11 @@ intent 取值：
 "数学建模国赛报名做完了" → complete
 "最近有什么要交的" → query
 "这周有几件事" → query
+"明天有什么课" → query
+"今天有什么课" → query
+"周三有课吗" → query
+"明天要带什么" → query
+"献血在哪办" → query
 "今天星期几" → chat
 "你是谁" → chat
 "你好" → chat
@@ -2479,7 +2585,10 @@ intent 取值：
 reply 写什么：
 - 中文口语，短，最多 4 行，不要用 markdown 符号。
 - query / chat / weather 必须把答案直接写在 reply 里。
-- query 只能依据【记事本快照】回答，快照里没有就说没有，绝不编造事项或时间。
+- query 只能依据【记事本快照】和【课程】回答，两处都没有就说没有，绝不编造事项、时间、地点。
+- 问"在哪办 / 要带什么 / 怎么报名"，看快照条目后面的「备注」段，照抄里面的信息，不要自己补充。
+- 句子里只要出现"课 / 上课 / 教室 / 老师 / 第几节"，先看【课程】再回答；"今天有什么"（没说"课"）才是问截止事项。
+- 问课程、教室、老师，看【课程】段。只给了未来 7 天，问更远的就直接说课表里看不到。
 - chat 里被问到现在几点、今天几号、星期几，直接用【现在】里的信息回答。
 - 不知道就直说不知道，不要编。
 - record / complete 的 reply 只写一句轻轻确认，不要自己写具体日期时间，系统会补。
@@ -2694,6 +2803,8 @@ async function applyIntent(d, raw){
 async function replySmart(text){
   const hasFutureTime = /(明天|后天|大后天|今天|今晚|明早|下周|下下|本周|这周|周[一二三四五六日天]|星期[一二三四五六日天]|\d{1,2}\s*月\s*\d{1,2}|\d{1,2}\s*[:：点]\s*\d{0,2}|\d+\s*天[后内]|月底|周末)/.test(text);
   const isQuestion = looksLikeQuestion(text);
+  const explicitRecord = /(记一下|记下|帮我记|帮我记录|提醒我|备忘|别忘)/.test(text);
+  const askCourse = /(什么课|上什么|有课吗|有课么|哪节课|几点上课|在哪上课|哪个教室|老师是谁|谁教)/.test(text);
 
   let d = null, err = null;
   try{ d = await callQwen(QWEN_TEXT.primary, text); }catch(e){ err = e; }
@@ -2704,13 +2815,20 @@ async function replySmart(text){
       "这句里有未来的时间，用户是在交代一件要做的事，不是在说已经完成。请重新判断 intent。", d);
   }
 
-  // 兜底校验二：明明是打招呼/提问，别当成要记录的事项
-  if(d && d.intent === "record"){
-    const noTime = !(Array.isArray(d.items) ? d.items : []).some(it => String((it || {}).raw_time || "").trim());
-    if(isQuestion && noTime){
-      d = await retryWithHint(text,
-        "这更像一个提问或打招呼，不是要记录的事项。请重新判断 intent，不要往 record 上靠。", d);
-    }
+  // 兜底校验二：明明是提问（哪怕句子里带"周三""明天"），也别当成要记录的事项
+  // 例外：明确说了"记一下 / 提醒我"的，是让我记，不是问我
+  if(d && d.intent === "record" && isQuestion && !explicitRecord){
+    const alt = await retryWithHint(text,
+      "用户在提问，不是要记录。请把 intent 设为 query 或 chat，并在 reply 里直接回答。", null);
+    if(alt && alt.intent && alt.intent !== "record") d = alt;
+    else return `这个我拿不准，${call}是在问我，还是想让我记一件事？\n想记的话带上时间，比如「11月15日 23:59 建模报名」。`;
+  }
+
+  // 兜底校验二·五：问课程表时，回答必须来自【课程】段
+  if(d && d.intent === "query" && askCourse){
+    const alt = await retryWithHint(text,
+      "这是问课程表的问题。reply 必须依据【课程】段回答，写清时间、课名、教室、老师；【课程】里没这门课就说没课。", d);
+    if(alt && String(alt.reply || "").trim()) d = alt;
   }
 
   // 兜底校验三：问"今天星期几"这种，就算句子里带"今天"，也不能记成待办
@@ -3775,7 +3893,7 @@ function seed(){
   save();
 }
 /* 版本戳：判断浏览器加载的是不是最新版 */
-const APP_VER = "v0.8.1 · 2026-11-27";
+const APP_VER = "v0.9.0 · 2026-11-27";
 (function(){
   const el = $("#verLine");
   if(el) el.textContent = APP_VER + " · 对话 " + QWEN_TEXT.primary;
